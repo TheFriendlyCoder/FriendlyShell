@@ -20,5 +20,5 @@ class BasicShell(BaseShell, ShellHelpMixin, CommandCompleteMixin):
             super(BasicShell, self).run()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     pass

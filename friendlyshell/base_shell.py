@@ -93,7 +93,7 @@ class BaseShell(object):
         """Parses a single line of command text and returns the parsed output
 
         :param str line: line of command text to be parsed
-        :returns: parsed output
+        :returns: Parser object describing all of the parsed command tokens
         :rtype: :class:`pyparsing.ParseResults`"""
         self._log.debug('Parsing command input "%s"...', line)
 

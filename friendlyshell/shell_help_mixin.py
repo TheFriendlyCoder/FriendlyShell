@@ -68,9 +68,9 @@ class ShellHelpMixin(object):
 
         self._log.info(func())
 
-    def complete_help(self, parser, parameter_index):
+    def complete_help(self, parser, parameter_index, cursor_position):
         """Automatic completion method for the 'help' command"""
-        return self._complete_command_names(parser.params[parameter_index])
+        return self._complete_command_names(parser.params[parameter_index][:cursor_position])
 
     def help_help(self):
         """Generates inline help for the 'help' command"""
