@@ -102,7 +102,7 @@ class BaseShell(object):
         except pp.ParseException as err:
             self._log.error('Parsing error:')
             self._log.error('\t%s', err.pstr)
-            self._log.error('\t' + ' ' * (err.col-1) + '^')
+            self._log.error('\t%s^', ' ' * (err.col-1))
             self._log.debug('Details: %s', err)
             return None
         self._log.debug('Parsed command line is "%s"', retval)

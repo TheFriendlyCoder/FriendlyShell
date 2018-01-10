@@ -66,7 +66,7 @@ def test_help_help(caplog):
         assert "Online help generation tool" in caplog.text
 
 
-def test_ocluded_help(caplog):
+def test_occluded_help(caplog):
 
     class MyShell(BaseShell, ShellHelpMixin):
         def do_something(self):
