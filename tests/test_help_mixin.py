@@ -1,4 +1,3 @@
-import logging
 from friendlyshell.base_shell import BaseShell
 from friendlyshell.shell_help_mixin import ShellHelpMixin
 from mock import patch
