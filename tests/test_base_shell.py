@@ -149,4 +149,4 @@ def test_command_missing_params():
 
 
 if __name__ == "__main__":
-    pass
+    pytest.main([__file__, "-v", "-s"])

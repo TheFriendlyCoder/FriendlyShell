@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Packaging script"""
 import os
 from setuptools import setup, find_packages
 
@@ -25,18 +26,21 @@ def check_tag_name(tag_name):
 def get_version_number():
     """Retrieves the version number for a project"""
 
-    # If we are building from a tag using Travis-CI, set our version number to the tag name
+    # If we are building from a tag using Travis-CI,
+    # set our version number to the tag name
     if 'TRAVIS_TAG' in os.environ and not os.environ['TRAVIS_TAG'] == '':
         if not check_tag_name(os.environ['TRAVIS_TAG']):
-            raise Exception("Invalid tag name {0}. Must be of the form 'X.Y.Z'".format(os.environ['TRAVIS_TAG']))
+            raise Exception(
+                "Invalid tag name {0}. Must be of the form 'X.Y.Z'".format(
+                    os.environ['TRAVIS_TAG']))
         return os.environ['TRAVIS_TAG']
 
     # if we get here we know we're building a pre-release version
     # so we set a fake version as a place holder
     retval = "0.0"
 
-    # If we are building from a branch using Travis-CI, append the build number so we know where the
-    # package came from
+    # If we are building from a branch using Travis-CI,
+    # append the build number so we know where the package came from
     if 'TRAVIS_BUILD_NUMBER' in os.environ:
         retval += "." + os.environ['TRAVIS_BUILD_NUMBER']
     else:
@@ -48,26 +52,24 @@ def get_version_number():
     return retval
 
 
-# Dynamically generate a list of sub-modules to be packaged with the project
-# Always exclude unit test modules from the package
-_packages = find_packages(exclude=['tests', 'tests.*'])
-
 setup(
     name='friendlyshell',
     version=get_version_number(),
     author='Kevin S. Phillips',
     author_email='kevin@thefriendlycoder.com',
-    packages=_packages,
-    description="Framework for writing interactive Python command line interfaces, similar to the 'cmd' build in class.",
+    packages=find_packages(exclude=['tests', 'tests.*']),
+    description="Framework for writing interactive Python command line "
+                "interfaces, similar to the 'cmd' built in class.",
     long_description=open('README.rst').read(),
     url='https://github.com/TheFriendlyCoder/friendlyshell',
     install_requires=['pyparsing', 'tabulate'],
-    keywords='cmd command shell interactive interpreter',
+    keywords='cmd command line shell interactive interpreter',
     license="GPL",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
-        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+        "License :: OSI Approved :: "
+        "GNU General Public License v3 or later (GPLv3+)",
         "Natural Language :: English",
         "Operating System :: MacOS",
         "Operating System :: Microsoft",
@@ -78,6 +80,7 @@ setup(
         "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
         "Topic :: Software Development :: Libraries"
     ]
 )

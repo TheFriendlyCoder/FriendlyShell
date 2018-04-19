@@ -10,14 +10,16 @@ from friendlyshell.command_parsers import default_line_parser
 class BaseShell(object):
     """Common base class for all Friendly Shells
 
-    Defines basic IO and interactive shell logic common to all Friendly Shells"""
+    Defines basic IO and interactive shell logic common to all Friendly Shells
+    """
 
     def __init__(self):
         super(BaseShell, self).__init__()
         # characters preceding the cursor when prompting for command entry
         self.prompt = '> '
-        # flag controlling whether the command loop should continue processing commands
-        # If a command sets this flag to True, the main command loop will terminate
+        # flag controlling whether the command loop should continue processing
+        # commands. If a command sets this flag to True, the main command loop
+        # will terminate
         self._done = False
         # Command parser API for parsing tokens from command lines
         self._parser = default_line_parser()
@@ -27,8 +29,10 @@ class BaseShell(object):
     def run(self):
         """Main entry point function that launches our command line interpreter
 
-        This method will wait for input to be given via the command line, and process
-        each command provided until a request to terminate the shell is given."""
+        This method will wait for input to be given via the command line, and
+        process each command provided until a request to terminate the shell is
+        given.
+        """
         while not self._done:
             try:
                 line = input(self.prompt)
@@ -36,9 +40,14 @@ class BaseShell(object):
                 self._done = True
                 continue
             except Exception as err:  # pylint: disable=broad-except
-                self._log.error('Unexpected error during input sequence: %s', err)
-                # Reserve the detailed debug info / stack trace to the debug output only
-                # This avoids spitting out lots of technical garbage to the user
+                self._log.error(
+                    'Unexpected error during input sequence: %s',
+                    err
+                )
+
+                # Reserve the detailed debug info / stack trace to the debug
+                # output only. This avoids spitting out lots of technical
+                # garbage to the user
                 self._log.debug(err, exc_info=True)
                 self._done = True
                 continue
@@ -51,10 +60,13 @@ class BaseShell(object):
             try:
                 if parser.params:
                     if len(parser.params) < self._count_required_params(func):
-                        self._log.error('Command %s requires %s parameters but %s were provided.',
-                                        func.__name__,
-                                        self._count_required_params(func),
-                                        len(parser.params))
+                        msg = 'Command %s requires %s parameters but ' \
+                              '%s were provided.'
+                        self._log.error(
+                            msg,
+                            func.__name__,
+                            self._count_required_params(func),
+                            len(parser.params))
                         continue
                     func(*parser.params)
                 else:
@@ -62,21 +74,29 @@ class BaseShell(object):
             except Exception as err:  # pylint: disable=broad-except
                 # Log summary info about the error to standard error output
                 self._log.error('Unknown error detected: %s', err)
-                # Reserve the detailed debug info / stack trace to the debug output only
-                # This avoids spitting out lots of technical garbage to the user
+                # Reserve the detailed debug info / stack trace to the debug
+                # output only. This avoids spitting out lots of technical
+                # garbage to the user
                 self._log.debug(err, exc_info=True)
 
     def _count_required_params(self, cmd_method):
         """Gets the number of required parameters from a command method
 
-        :param cmd_method: :class:`inspect.Signature` for method to analyse
-        :returns: Number of required parameters (ie: parameters without default values) for the given method
+        :param cmd_method:
+            :class:`inspect.Signature` for method to analyse
+        :returns:
+            Number of required parameters (ie: parameters without default
+            values) for the given method
         :rtype: :class:`int`
         """
 
         if sys.version_info < (3, 3):
             params = inspect.getargspec(cmd_method)  # pylint: disable=deprecated-method
-            self._log.debug('Command %s params are: %s', cmd_method.__name__, params)
+            self._log.debug(
+                'Command %s params are: %s',
+                cmd_method.__name__,
+                params
+            )
             tmp = params.args
             if 'self' in tmp:
                 tmp.remove('self')

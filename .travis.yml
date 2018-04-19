@@ -1,23 +1,45 @@
 language: python
+sudo: false
 
+# Make sure we run all 'test' stages before we deply
+# and ensure we only deploy from production branches / tags
+stages:
+  - test
+  - name: deploy
+    if: tag IS present
+
+# Generate a matrix for all Python versions we support
 python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
+  - 2.7
+  - 3.4
+  - 3.5
+  - 3.6
+  - pypy
+  - pypy3
 
-install:
-  - pip install tox twine wheel
+# Install all of our build-time dependencies
+install: pip install wheel twine tox coveralls
 
+# Scripts for the default "test" stage
+# one copy of this default job will be generated for each python
+# version stated above
 script:
-  - export PYVER=`echo $TRAVIS_PYTHON_VERSION | tr "." "\n" | head -n 1`
-  - echo $PYVER
-  - tox -e py$PYVER
+  - source ./travisenv.sh
+  - tox
 
+# Default a secondary, custom job that only runs after the default 'test'
+# job completes successfully
+# NOTE: Deploy stages will only run on tags or off the master branch as
+#       defined in the stage declarations above
+# NOTE: We've restricted this deploy job to only run for Python v3.6
+#       since we're generating a version-agnostic package
 jobs:
   include:
-    - stage: package
+    - stage: deploy
       python: 3.6
       script:
-      - python setup.py bdist_wheel
-      - twine upload dist/*.whl -u $DEPLOY_USER -p $DEPLOY_PASS
+        - python setup.py bdist_wheel
+        - twine upload dist/*.whl -u $DEPLOY_USER -p $DEPLOY_PASS
+
+after_success:
+ - coveralls

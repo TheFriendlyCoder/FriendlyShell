@@ -1,5 +1,6 @@
 from friendlyshell.base_shell import BaseShell
 from friendlyshell.command_complete_mixin import CommandCompleteMixin
+import pytest
 
 
 def test_complete_command_names():
@@ -25,4 +26,4 @@ def test_complete_command_names():
 
 
 if __name__ == "__main__":
-    pass
+    pytest.main([__file__, "-v", "-s"])

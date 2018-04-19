@@ -1,10 +1,11 @@
+import logging
 from friendlyshell.base_shell import BaseShell
 from friendlyshell.shell_help_mixin import ShellHelpMixin
 from mock import patch
+import pytest
 
 
 def test_list_commands(caplog):
-
     class MyShell (BaseShell, ShellHelpMixin):
         def do_something(self):
             """Here's online help for my 'something' command"""
@@ -84,4 +85,4 @@ def test_occluded_help(caplog):
 
 
 if __name__ == "__main__":
-    pass
+    pytest.main([__file__, "-v", "-s"])

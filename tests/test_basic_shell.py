@@ -1,4 +1,5 @@
 from friendlyshell.basic_shell import BasicShell
+import pytest
 
 
 def test_init():
@@ -6,4 +7,4 @@ def test_init():
 
 
 if __name__ == "__main__":
-    pass
+    pytest.main([__file__, "-v", "-s"])
