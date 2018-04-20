@@ -17,8 +17,8 @@
     :target: http://friendlyshell.readthedocs.io/en/latest
     :alt: Documentation Status
 
-.. image:: https://requires.io/github/TheFriendlyCoder/friendlyshell/requirements.svg?branch=master
-     :target: https://requires.io/github/TheFriendlyCoder/friendlyshell/requirements/?branch=master
+.. image:: https://requires.io/github/TheFriendlyCoder/FriendlyShell/requirements.svg?branch=master
+     :target: https://requires.io/github/TheFriendlyCoder/FriendlyShell/requirements/?branch=master
      :alt: Requirements Status
 
 .. image:: https://img.shields.io/pypi/pyversions/friendlyshell.svg
