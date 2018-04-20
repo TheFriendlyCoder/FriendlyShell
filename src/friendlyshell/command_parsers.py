@@ -1,4 +1,4 @@
-"""Pre-defined command line parsers supported by Friendly Shell APIs
+r"""Pre-defined command line parsers supported by Friendly Shell APIs
 
 All Friendly Shell command lines are expected to begin with a command name,
 followed by 0 or more input parameters as shown below:
@@ -50,13 +50,13 @@ def default_command_token():
 
 
 def quoted_space_sep_params_token():
-    """Gets a token parser that supports
+    r"""Gets a token parser that supports
 
     This parser expects all commands to take the following form:
         <command_name>[ <optional_param1> <optional_param2>...]<eol>
 
     The <command_name> maps to a method of this class or a descendent of it with
-    the same name but with a prefix of 'do\_'. As a result tokens for commands
+    the same name but with a prefix of "do\_". As a result tokens for commands
     must adhere to the same restrictions as a typical Python class method.
 
     Commands may optionally accept parameters if desired. Parameters are
