@@ -9,9 +9,9 @@
     :target: https://github.com/TheFriendlyCoder/friendlyshell/blob/master/LICENSE
     :alt: License
 
-.. image:: https://coveralls.io/repos/github/TheFriendlyCoder/friendlyshell/badge.svg?branch=master
-    :target: https://coveralls.io/github/TheFriendlyCoder/friendlyshell?branch=master
-    :alt: Test Coverage
+.. image:: https://coveralls.io/repos/github/TheFriendlyCoder/FriendlyShell/badge.svg?branch=master
+     :target: https://coveralls.io/github/TheFriendlyCoder/FriendlyShell?branch=master
+     :alt: Test Coverage
 
 .. image:: https://readthedocs.org/projects/friendlyshell/badge/?version=latest
     :target: http://friendlyshell.readthedocs.io/en/latest
@@ -33,8 +33,8 @@
     :target: https://pypi.org/project/friendlyshell/
     :alt: Latest Version
 
-.. image:: https://api.travis-ci.org/TheFriendlyCoder/friendlyshell.svg?branch=master
-    :target: https://travis-ci.org/TheFriendlyCoder/friendlyshell
+.. image:: https://api.travis-ci.org/TheFriendlyCoder/FriendlyShell.svg?branch=master
+    :target: https://travis-ci.org/TheFriendlyCoder/FriendlyShell
     :alt: Build status
 
 =============
