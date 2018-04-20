@@ -1,10 +1,10 @@
-.. This is a readme file encoded in reStructuredText format, intended for use on
-.. the summary page for the FriendlyShell PyPI project. Care should be taken to
-.. make sure the encoding is compatible with PyPI's markup syntax. See this site
-.. for details:
-.. http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
-..
+.. FriendlyShell documentation master file, created by
+   sphinx-quickstart on Thu Apr 19 21:33:23 2018.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
+Welcome to FriendlyShell's documentation!
+=========================================
 
 .. image:: https://img.shields.io/pypi/l/friendlyshell.svg
     :target: https://github.com/TheFriendlyCoder/friendlyshell/blob/master/LICENSE
@@ -38,9 +38,28 @@
     :target: https://travis-ci.org/TheFriendlyCoder/FriendlyShell
     :alt: Build status
 
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   modules
+
 =============
 Overview
 =============
 
 Framework for writing interactive Python command line interfaces, similar to
 the 'cmd' built in class.
+
+
+
+
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
