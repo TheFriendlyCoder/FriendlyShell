@@ -5,6 +5,7 @@
 .. http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
 ..
 
+
 .. image:: https://img.shields.io/pypi/l/friendlyshell.svg
     :target: https://github.com/TheFriendlyCoder/friendlyshell/blob/master/LICENSE
     :alt: License
