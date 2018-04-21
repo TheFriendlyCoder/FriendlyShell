@@ -88,7 +88,8 @@ class BaseShell(object):
         :rtype: :class:`int`
         """
 
-        if sys.version_info < (3, 3):
+        if sys.version_info < (3, 3):  # pragma: no cover
+            # TODO: Consider whether I should drop Python 3.0-3.3 support
             params = inspect.getargspec(cmd_method)  # pylint: disable=deprecated-method
             self.debug(
                 'Command %s params are: %s',

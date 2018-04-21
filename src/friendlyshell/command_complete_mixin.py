@@ -3,19 +3,19 @@ import inspect
 import platform
 from contextlib import contextmanager
 
-try:
+try:  # pragma: no cover
     if platform.system() == 'Windows':
         # TODO: Test this on a Windows platform
         import pyreadline as readline
     else:
         import readline
     AUTOCOMPLETE_ENABLED = True
-except ImportError:
+except ImportError:  # pragma: no cover
     AUTOCOMPLETE_ENABLED = False
 
 
 @contextmanager
-def auto_complete_manager(key, callback):
+def auto_complete_manager(key, callback):  # pragma: no cover
     """Context manager for enabling command line auto-completion
 
     :param str key:
@@ -44,7 +44,8 @@ def auto_complete_manager(key, callback):
     readline.set_completer(old_completer)
 
 
-class CommandCompleteMixin(object):  # pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods
+class CommandCompleteMixin(object):  # pragma: no cover
     """Mixin to be added to any friendly shell to add command completion"""
 
     def __init__(self):
