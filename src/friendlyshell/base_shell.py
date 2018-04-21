@@ -1,5 +1,4 @@
 """Common shell interaction logic shared between different shells"""
-import logging
 import sys
 import inspect
 import pyparsing as pp
@@ -7,6 +6,7 @@ from six.moves import input
 from friendlyshell.command_parsers import default_line_parser
 
 
+# pylint: disable=no-member
 class BaseShell(object):
     """Common base class for all Friendly Shells
 
@@ -23,8 +23,6 @@ class BaseShell(object):
         self._done = False
         # Command parser API for parsing tokens from command lines
         self._parser = default_line_parser()
-        # logger
-        self._log = logging.getLogger(__name__)
 
     def run(self):
         """Main entry point function that launches our command line interpreter
@@ -40,7 +38,7 @@ class BaseShell(object):
                 self._done = True
                 continue
             except Exception as err:  # pylint: disable=broad-except
-                self._log.error(
+                self.error(
                     'Unexpected error during input sequence: %s',
                     err
                 )
@@ -48,7 +46,7 @@ class BaseShell(object):
                 # Reserve the detailed debug info / stack trace to the debug
                 # output only. This avoids spitting out lots of technical
                 # garbage to the user
-                self._log.debug(err, exc_info=True)
+                self.debug(err, exc_info=True)
                 self._done = True
                 continue
 
@@ -62,7 +60,7 @@ class BaseShell(object):
                     if len(parser.params) < self._count_required_params(func):
                         msg = 'Command %s requires %s parameters but ' \
                               '%s were provided.'
-                        self._log.error(
+                        self.error(
                             msg,
                             func.__name__,
                             self._count_required_params(func),
@@ -73,11 +71,11 @@ class BaseShell(object):
                     func()
             except Exception as err:  # pylint: disable=broad-except
                 # Log summary info about the error to standard error output
-                self._log.error('Unknown error detected: %s', err)
+                self.error('Unknown error detected: %s', err)
                 # Reserve the detailed debug info / stack trace to the debug
                 # output only. This avoids spitting out lots of technical
                 # garbage to the user
-                self._log.debug(err, exc_info=True)
+                self.debug(err, exc_info=True)
 
     def _count_required_params(self, cmd_method):
         """Gets the number of required parameters from a command method
@@ -92,7 +90,7 @@ class BaseShell(object):
 
         if sys.version_info < (3, 3):
             params = inspect.getargspec(cmd_method)  # pylint: disable=deprecated-method
-            self._log.debug(
+            self.debug(
                 'Command %s params are: %s',
                 cmd_method.__name__,
                 params
@@ -115,17 +113,17 @@ class BaseShell(object):
         :param str line: line of command text to be parsed
         :returns: Parser object describing all of the parsed command tokens
         :rtype: :class:`pyparsing.ParseResults`"""
-        self._log.debug('Parsing command input "%s"...', line)
+        self.debug('Parsing command input "%s"...', line)
 
         try:
             retval = self._parser.parseString(line, parseAll=True)
         except pp.ParseException as err:
-            self._log.error('Parsing error:')
-            self._log.error('\t%s', err.pstr)
-            self._log.error('\t%s^', ' ' * (err.col-1))
-            self._log.debug('Details: %s', err)
+            self.error('Parsing error:')
+            self.error('\t%s', err.pstr)
+            self.error('\t%s^', ' ' * (err.col-1))
+            self.debug('Details: %s', err)
             return None
-        self._log.debug('Parsed command line is "%s"', retval)
+        self.debug('Parsed command line is "%s"', retval)
         return retval
 
     def _find_command(self, command_name):
@@ -144,7 +142,7 @@ class BaseShell(object):
 
     def do_exit(self):
         """Terminates the command interpreter"""
-        self._log.debug('Terminating interpreter...')
+        self.debug('Terminating interpreter...')
         self._done = True
 
 

@@ -8,7 +8,5 @@ class MyShell (BasicShell):
 
 
 if __name__ == "__main__":
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
     obj = MyShell()
     obj.run()

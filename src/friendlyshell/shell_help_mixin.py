@@ -23,11 +23,11 @@ class ShellHelpMixin(object):
             method_name = cur_method[0]
             method_obj = cur_method[1]
 
-            self._log.debug('Checking for command method %s', method_name)
+            self.debug('Checking for command method %s', method_name)
 
             # Methods that start with 'do_' are interpreted as command operator
             if method_name.startswith('do_'):
-                self._log.debug("Found a do command %s", method_name)
+                self.debug("Found a do command %s", method_name)
                 # Extrapolate the command name by removing the 'do_' prefix
                 cmd_name = cur_method[0][3:]
 
@@ -37,7 +37,7 @@ class ShellHelpMixin(object):
                 command_list['Description'].append(doc_string.split('\n')[0])
 
                 if hasattr(self, method_name.replace('do_', 'help_')):
-                    self._log.debug(
+                    self.debug(
                         "Found an associated help method %s",
                         method_name.replace('do_', 'help_')
                     )
@@ -51,7 +51,7 @@ class ShellHelpMixin(object):
                 else:
                     command_list['Extended Help'].append('N/A')
 
-        self._log.info(tabulate.tabulate(command_list, headers="keys"))
+        self.info(tabulate.tabulate(command_list, headers="keys"))
 
     def do_help(self, arg=None):
         """Online help generation (this command)
@@ -60,30 +60,38 @@ class ShellHelpMixin(object):
             Optional command to generate online help for.
             If not defined, show a list of commands
         """
+        # no command given, show available commands
         if arg is None:
-            self._log.debug("Showing help for available commands...")
+            self.debug("Showing help for available commands...")
             self._list_commands()
             return
 
+        # Command given, see if there's a "help_<cmd>" method on the class
         method_name = 'help_' + arg
         if not hasattr(self, method_name):
-            self._log.info('No online help for command "%s"', arg)
-
+            # If no explicit help method, parse the help from the method
+            # doc string for the command method
             cmd_method_name = 'do_' + arg
             if hasattr(self, cmd_method_name):
-                docs = self._log.getattr(self, 'do_' + arg).__doc__
-                self._log.info(docs.split('\n')[0])
+                docs = getattr(self, 'do_' + arg).__doc__
+                if docs:
+                    self.info(docs.split('\n')[0])
+                    return
+
+            self.info('No online help for command "%s"', arg)
             return
 
+        # Once we get here we know we have an explicit help method, so we
+        # call it here and display the output returned from it
         func = getattr(self, method_name)
         if not inspect.ismethod(func):
-            self._log.error(
+            self.error(
                 'Error: definition "%s" in derived class must be a method. '
                 'Check implementation',
                 method_name)
             return
 
-        self._log.info(func())
+        self.info(func())
 
     def complete_help(self, parser, parameter_index, cursor_position):
         """Automatic completion method for the 'help' command"""

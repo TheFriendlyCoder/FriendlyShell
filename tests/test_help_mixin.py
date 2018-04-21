@@ -1,11 +1,14 @@
+import logging
 from friendlyshell.base_shell import BaseShell
 from friendlyshell.shell_help_mixin import ShellHelpMixin
+from friendlyshell.basic_logger_mixin import BasicLoggerMixin
 from mock import patch
 import pytest
 
 
 def test_list_commands(caplog):
-    class MyShell (BaseShell, ShellHelpMixin):
+    caplog.set_level(logging.INFO)
+    class MyShell (BasicLoggerMixin, BaseShell, ShellHelpMixin):
         def do_something(self):
             """Here's online help for my 'something' command"""
             pass
@@ -22,9 +25,9 @@ def test_list_commands(caplog):
 
 
 def test_missing_help(caplog):
-    class MyShell(BaseShell, ShellHelpMixin):
+    caplog.set_level(logging.INFO)
+    class MyShell(BasicLoggerMixin, BaseShell, ShellHelpMixin):
         def do_something(self):
-            """Here's online help"""
             pass
 
     obj = MyShell()
@@ -34,11 +37,25 @@ def test_missing_help(caplog):
         obj.run()
         assert 'No online help' in caplog.text
 
+def test_default_help(caplog):
+    caplog.set_level(logging.INFO)
+    class MyShell(BasicLoggerMixin, BaseShell, ShellHelpMixin):
+        def do_something(self):
+            """Here's online help"""
+            pass
+
+    obj = MyShell()
+
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.side_effect = ['help something', 'exit']
+        obj.run()
+        assert "Here's online help" in caplog.text
 
 def test_command_help(caplog):
+    caplog.set_level(logging.INFO)
     expected_help = "Here's my verbose help for something..."
 
-    class MyShell(BaseShell, ShellHelpMixin):
+    class MyShell(BasicLoggerMixin, BaseShell, ShellHelpMixin):
         def do_something(self):
             """Here's online help"""
             pass
@@ -55,7 +72,8 @@ def test_command_help(caplog):
 
 
 def test_help_help(caplog):
-    class MyShell(BaseShell, ShellHelpMixin):
+    caplog.set_level(logging.INFO)
+    class MyShell(BasicLoggerMixin, BaseShell, ShellHelpMixin):
         pass
 
     obj = MyShell()
@@ -67,8 +85,8 @@ def test_help_help(caplog):
 
 
 def test_occluded_help(caplog):
-
-    class MyShell(BaseShell, ShellHelpMixin):
+    caplog.set_level(logging.INFO)
+    class MyShell(BasicLoggerMixin, BaseShell, ShellHelpMixin):
         def do_something(self):
             """Here's online help"""
             pass
