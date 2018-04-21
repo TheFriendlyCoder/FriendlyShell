@@ -24,6 +24,19 @@ def test_list_commands(caplog):
         assert obj.do_something.__doc__ in caplog.text
 
 
+def test_help_missing_command(caplog):
+    caplog.set_level(logging.INFO)
+    class MyShell (BasicLoggerMixin, BaseShell, ShellHelpMixin):
+        pass
+
+    obj = MyShell()
+
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.side_effect = ['help something', 'exit']
+        obj.run()
+        assert "Command does not exist: something" in caplog.text
+
+
 def test_missing_help(caplog):
     caplog.set_level(logging.INFO)
     class MyShell(BasicLoggerMixin, BaseShell, ShellHelpMixin):
@@ -100,6 +113,16 @@ def test_occluded_help(caplog):
         obj.run()
         assert "Error: " in caplog.text
 
+def test_occluded_command(caplog):
+    caplog.set_level(logging.INFO)
+    class MyShell (BasicLoggerMixin, BaseShell, ShellHelpMixin):
+        do_something = "Hello"
 
+    obj = MyShell()
+
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.side_effect = ['help something', 'exit']
+        obj.run()
+        assert "Error: " in caplog.text
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])

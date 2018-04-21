@@ -66,32 +66,44 @@ class ShellHelpMixin(object):
             self._list_commands()
             return
 
-        # Command given, see if there's a "help_<cmd>" method on the class
-        method_name = 'help_' + arg
-        if not hasattr(self, method_name):
-            # If no explicit help method, parse the help from the method
-            # doc string for the command method
-            cmd_method_name = 'do_' + arg
-            if hasattr(self, cmd_method_name):
-                docs = getattr(self, 'do_' + arg).__doc__
-                if docs:
-                    self.info(docs.split('\n')[0])
-                    return
-
-            self.info('No online help for command "%s"', arg)
+        # Sanity check: make sure we're asking for help for a command
+        # that actually exists
+        cmd_method_name = 'do_' + arg
+        if not hasattr(self, cmd_method_name):
+            self.error("Command does not exist: %s", arg)
             return
-
-        # Once we get here we know we have an explicit help method, so we
-        # call it here and display the output returned from it
-        func = getattr(self, method_name)
-        if not inspect.ismethod(func):
+        cmd_method = getattr(self, cmd_method_name)
+        if not inspect.ismethod(cmd_method):
             self.error(
                 'Error: definition "%s" in derived class must be a method. '
                 'Check implementation',
-                method_name)
+                cmd_method_name)
             return
 
-        self.info(func())
+        # Next, see if there's a "help_<cmd>" method on the class
+        method_name = 'help_' + arg
+        if hasattr(self, method_name):
+            func = getattr(self, method_name)
+            if not inspect.ismethod(func):
+                self.error(
+                    'Error: definition "%s" in derived class must be a method. '
+                    'Check implementation',
+                    method_name)
+                return
+
+            self.info(func())
+            return
+
+        # If no explicit help method, parse the help from the doc string for
+        # the command method
+        docs = cmd_method.__doc__
+        if docs:
+            self.info(docs.split('\n')[0])
+            return
+
+        # If we get here then there's no online help defined for the command
+        # anywhere in the class hierarchy
+        self.info('No online help for command "%s"', arg)
 
     def complete_help(self, parser, parameter_index, cursor_position):
         """Automatic completion method for the 'help' command"""
