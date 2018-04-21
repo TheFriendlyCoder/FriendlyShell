@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath(os.path.join('..', 'src')))
 
 # -- Project information -----------------------------------------------------
 
-project = 'FriendlyShell'
+project = 'friendlyshell'
 copyright = '2018, Kevin S. Phillips'
 author = 'Kevin S. Phillips'
 
