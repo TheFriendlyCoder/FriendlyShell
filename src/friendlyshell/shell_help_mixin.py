@@ -23,8 +23,11 @@ class ShellHelpMixin(object):
             method_name = cur_method[0]
             method_obj = cur_method[1]
 
+            self._log.debug('Checking for command method %s', method_name)
+
             # Methods that start with 'do_' are interpreted as command operator
             if method_name.startswith('do_'):
+                self._log.debug("Found a do command %s", method_name)
                 # Extrapolate the command name by removing the 'do_' prefix
                 cmd_name = cur_method[0][3:]
 
@@ -34,6 +37,10 @@ class ShellHelpMixin(object):
                 command_list['Description'].append(doc_string.split('\n')[0])
 
                 if hasattr(self, method_name.replace('do_', 'help_')):
+                    self._log.debug(
+                        "Found an associated help method %s",
+                        method_name.replace('do_', 'help_')
+                    )
                     # NOTE:
                     # For the sake of online help, we'll assume that class
                     # attributes with 'help_' in their name are methods which
@@ -54,6 +61,7 @@ class ShellHelpMixin(object):
             If not defined, show a list of commands
         """
         if arg is None:
+            self._log.debug("Showing help for available commands...")
             self._list_commands()
             return
 
