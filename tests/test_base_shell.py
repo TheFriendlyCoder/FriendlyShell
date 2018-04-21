@@ -1,16 +1,22 @@
+import logging
 from friendlyshell.base_shell import BaseShell
+from friendlyshell.basic_logger_mixin import BasicLoggerMixin
 from mock import patch
 import pytest
 
 
 def test_defaults():
-    obj = BaseShell()
+    class MyShell(BasicLoggerMixin, BaseShell):
+        pass
+    obj = MyShell()
 
     assert obj.prompt == '> '
 
 
 def test_basic_parseline():
-    obj = BaseShell()
+    class MyShell(BasicLoggerMixin, BaseShell):
+        pass
+    obj = MyShell()
     exp_command = "MyCommand"
     exp_param1 = "Fu"
     exp_param2 = "Bar"
@@ -24,7 +30,9 @@ def test_basic_parseline():
 
 
 def test_find_exit_command():
-    obj = BaseShell()
+    class MyShell(BasicLoggerMixin, BaseShell):
+        pass
+    obj = MyShell()
 
     res = obj._find_command('exit')
 
@@ -34,7 +42,9 @@ def test_find_exit_command():
 
 
 def test_find_missing_command():
-    obj = BaseShell()
+    class MyShell(BasicLoggerMixin, BaseShell):
+        pass
+    obj = MyShell()
 
     res = obj._find_command('fubar')
 
@@ -42,7 +52,9 @@ def test_find_missing_command():
 
 
 def test_exit_command():
-    obj = BaseShell()
+    class MyShell(BasicLoggerMixin, BaseShell):
+        pass
+    obj = MyShell()
 
     assert obj._done is False
 
@@ -52,7 +64,9 @@ def test_exit_command():
 
 
 def test_simple_run():
-    obj = BaseShell()
+    class MyShell(BasicLoggerMixin, BaseShell):
+        pass
+    obj = MyShell()
     with patch('friendlyshell.base_shell.input') as MockInput:
         MockInput.return_value = 'exit'
         obj.run()
@@ -60,7 +74,10 @@ def test_simple_run():
 
 
 def test_invalid_run(caplog):
-    obj = BaseShell()
+    caplog.set_level(logging.INFO)
+    class MyShell(BasicLoggerMixin, BaseShell):
+        pass
+    obj = MyShell()
     with patch('friendlyshell.base_shell.input') as MockInput:
         # Return 2 different commands to execute - the first invalid, and the second to terminate the shell
         MockInput.side_effect = ['exit!', 'exit']
@@ -70,7 +87,9 @@ def test_invalid_run(caplog):
 
 
 def test_keyboard_interrupt():
-    obj = BaseShell()
+    class MyShell(BasicLoggerMixin, BaseShell):
+        pass
+    obj = MyShell()
     with patch('friendlyshell.base_shell.input') as MockInput:
         MockInput.side_effect = KeyboardInterrupt()
         obj.run()
@@ -78,7 +97,10 @@ def test_keyboard_interrupt():
 
 
 def test_unhandled_exception(caplog):
-    obj = BaseShell()
+    caplog.set_level(logging.INFO)
+    class MyShell(BasicLoggerMixin, BaseShell):
+        pass
+    obj = MyShell()
     with patch('friendlyshell.base_shell.input') as MockInput:
         expected_error = "Some crazy error"
         MockInput.side_effect = Exception(expected_error)
@@ -89,9 +111,10 @@ def test_unhandled_exception(caplog):
 
 
 def test_command_exception(caplog):
+    caplog.set_level(logging.INFO)
     expected_error = "Some weird thing just happened"
 
-    class test_class(BaseShell):
+    class test_class(BasicLoggerMixin, BaseShell):
         def do_something(self):
             raise Exception(expected_error)
 
@@ -106,7 +129,7 @@ def test_command_exception(caplog):
 def test_command_with_params():
     expected_param = "FuBar"
 
-    class test_class(BaseShell):
+    class test_class(BasicLoggerMixin, BaseShell):
         test_function_ran = False
         def do_something(self, my_param):
             assert my_param == expected_param
@@ -123,7 +146,7 @@ def test_command_with_params():
 def test_command_too_many_params():
     expected_params = "Fu Bar"
 
-    class test_class(BaseShell):
+    class test_class(BasicLoggerMixin, BaseShell):
         def do_something(self, my_param):
             pytest.fail("Test method should not be invoked")
 
@@ -136,7 +159,7 @@ def test_command_too_many_params():
 
 def test_command_missing_params():
 
-    class test_class(BaseShell):
+    class test_class(BasicLoggerMixin, BaseShell):
         def do_something(self, my_param1, my_param2):
             pytest.fail("Test method should not be invoked")
 

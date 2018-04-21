@@ -3,9 +3,11 @@ from friendlyshell.base_shell import BaseShell
 from friendlyshell.shell_help_mixin import ShellHelpMixin
 from friendlyshell.command_complete_mixin import \
     CommandCompleteMixin, auto_complete_manager
+from friendlyshell.basic_logger_mixin import BasicLoggerMixin
 
 
-class BasicShell(BaseShell, ShellHelpMixin, CommandCompleteMixin):
+class BasicShell(
+        BasicLoggerMixin, BaseShell, ShellHelpMixin, CommandCompleteMixin):
     """Friendly Shell with basic online help and command auto-completion"""
     def __init__(self):  # pylint: disable=useless-super-delegation
         super(BasicShell, self).__init__()
