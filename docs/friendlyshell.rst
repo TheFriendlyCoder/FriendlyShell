@@ -7,6 +7,7 @@ Submodules
 .. toctree::
 
    friendlyshell.base_shell
+   friendlyshell.basic_logger_mixin
    friendlyshell.basic_shell
    friendlyshell.command_complete_mixin
    friendlyshell.command_parsers
