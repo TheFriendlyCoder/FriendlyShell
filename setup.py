@@ -57,7 +57,7 @@ setup(
     version=get_version_number(),
     author='Kevin S. Phillips',
     author_email='kevin@thefriendlycoder.com',
-    package_dir={'':'src'},
+    package_dir={'': 'src'},
     packages=find_packages('src'),
     description="Framework for writing interactive Python command line "
                 "interfaces, similar to the 'cmd' built in class.",
