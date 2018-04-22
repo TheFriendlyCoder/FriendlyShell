@@ -1,8 +1,11 @@
+import platform
 from friendlyshell.basic_shell import BasicShell
 import pytest
 from mock import patch
 
 
+@pytest.mark.skipif(platform.python_implementation()=="PyPy",
+                    reason="Test not supported on PyPy")
 def test_init():
     obj = BasicShell()
 
