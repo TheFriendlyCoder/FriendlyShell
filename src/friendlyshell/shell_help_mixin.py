@@ -5,8 +5,8 @@ import tabulate
 
 class ShellHelpMixin(object):
     """Mixin class to be added to any friendly shell to add online help"""
-    def __init__(self):  # pylint: disable=useless-super-delegation
-        super(ShellHelpMixin, self).__init__()
+    def __init__(self, *args, **kwargs):  # pylint: disable=useless-super-delegation
+        super(ShellHelpMixin, self).__init__(*args, **kwargs)
 
     def _list_commands(self):
         """Displays a list of supported commands"""

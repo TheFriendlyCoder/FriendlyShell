@@ -51,24 +51,37 @@ def test_find_missing_command():
     assert res is None
 
 
-def test_exit_command():
-    class MyShell(BasicLoggerMixin, BaseShell):
-        pass
-    obj = MyShell()
-
-    assert obj._done is False
-
-    obj.do_exit()
-
-    assert obj._done is True
-
-
-def test_simple_run():
+def test_simple_run_exit():
     class MyShell(BasicLoggerMixin, BaseShell):
         pass
     obj = MyShell()
     with patch('friendlyshell.base_shell.input') as MockInput:
         MockInput.return_value = 'exit'
+        obj.run()
+        MockInput.assert_called_once()
+
+
+def test_simple_nested_exit():
+    class SubShell(BasicLoggerMixin, BaseShell):
+        pass
+    class MyShell(BasicLoggerMixin, BaseShell):
+        def do_mysubshell (self):
+            temp = SubShell(parent=self)
+            return temp.run()
+
+    obj = MyShell()
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.side_effect = ['mysubshell', 'exit']
+        obj.run()
+        assert MockInput.call_count == 2
+
+
+def test_simple_run_close():
+    class MyShell(BasicLoggerMixin, BaseShell):
+        pass
+    obj = MyShell()
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.return_value = 'close'
         obj.run()
         MockInput.assert_called_once()
 

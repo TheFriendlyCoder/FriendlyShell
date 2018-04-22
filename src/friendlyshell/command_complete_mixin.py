@@ -2,6 +2,7 @@
 import os
 import inspect
 import platform
+import tempfile
 from contextlib import contextmanager
 
 try:  # pragma: no cover
@@ -18,19 +19,24 @@ except ImportError:  # pragma: no cover
 
 
 @contextmanager
-def auto_complete_manager(key, callback, history_file=None):  # pragma: no cover
-    """Context manager for enabling command line auto-completion
+def _autocomplete_helper(key, callback, history_file):  # pragma: no cover
+    """Helper method used by :meth:`auto_complete_manager`
 
-    :param str key:
-        descriptor for keyboard key to use for auto completion trigger
-    :param callback:
-        method point for the callback to run when completion key is pressed
+    This helper provides the functionality for a "simple", unnested
+    auto-completion system. For Friendly Shells without nested sub-shells
+    this helper provides all the functionality necessary to support command
+    completion.
+
+    For nested sub-shells to parent :meth:`auto_complete_manager` method
+    takes care of swizzling the command history for each nested sub-shell
+    so each one can have it's own independent history and such independent
+    from the parent and it's siblings.
+
+
+    :param str key: see :meth:`_autocomplete_helper` for details
+    :param callback: see :meth:`_autocomplete_helper` for details
+    :param str history_file: see :meth:`_autocomplete_helper` for details
     """
-    if not AUTOCOMPLETE_ENABLED:
-        # If auto-completion isn't supported, do nothing
-        yield
-        return
-
     if os.path.exists(history_file) and hasattr(readline, "read_history_file"):
         readline.read_history_file(history_file)
 
@@ -56,12 +62,64 @@ def auto_complete_manager(key, callback, history_file=None):  # pragma: no cover
             readline.write_history_file(history_file)
 
 
+@contextmanager
+def auto_complete_manager(key, callback, history_file=None):  # pragma: no cover
+    """Context manager for enabling command line auto-completion
+
+    This context manager can be used to ensure that command completion for
+    a Friendly Shell runner can have it's own self-defined auto-completion
+    and command history while not affecting the global completion sub-system
+    that may already be configured prior to running the Friendly Shell.
+    Through the use of a context manager, we ensure the state of the
+    command completion subsystem will be restored regardless of how the
+    context manager was terminated.
+
+    :param str key:
+        descriptor for keyboard key to use for auto completion trigger
+    :param callback:
+        method point for the callback to run when completion key is pressed
+    :param str history_file:
+        optional path to the history file to use for storing previous commands
+        run by this shell. If not provided, history will not be saved.
+    """
+    # If auto-completion isn't supported, do nothing
+    if not AUTOCOMPLETE_ENABLED:
+        yield
+        return
+
+    # If auto-complet enabled but no existing history exists, we can assume
+    # we aren't working inside a nested sub-shell, so just return our
+    # conventional context manager
+    if not readline.get_current_history_length():
+        with _autocomplete_helper(key, callback, history_file):
+            yield
+            return
+
+    # If we get here we know we're inside a nest sub-shell, so we need
+    # to take care to preserve the state of the parent shell so the sub-shell
+    # can initialize it's own unique history
+    with tempfile.NamedTemporaryFile() as temp_file:
+
+        # Save the current shell's history to a temporary file
+        readline.write_history_file(temp_file.name)
+        readline.clear_history()
+
+        # Then launch our typical auto-complete context manager
+        with _autocomplete_helper(key, callback, history_file):
+            yield
+
+        # restore the state of our command history for the parent shell
+        # when the sub-shell terminates
+        readline.clear_history()
+        readline.read_history_file(temp_file.name)
+
+
 # pylint: disable=too-few-public-methods
 class CommandCompleteMixin(object):  # pragma: no cover
     """Mixin to be added to any friendly shell to add command completion"""
 
-    def __init__(self):
-        super(CommandCompleteMixin, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(CommandCompleteMixin, self).__init__(*args, **kwargs)
         self.complete_key = 'tab'
         self._latest_matches = None
 

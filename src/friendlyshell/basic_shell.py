@@ -10,8 +10,8 @@ from friendlyshell.basic_logger_mixin import BasicLoggerMixin
 class BasicShell(
         BasicLoggerMixin, BaseShell, ShellHelpMixin, CommandCompleteMixin):
     """Friendly Shell with basic online help and command auto-completion"""
-    def __init__(self):  # pylint: disable=useless-super-delegation
-        super(BasicShell, self).__init__()
+    def __init__(self, *args, **kwargs):  # pylint: disable=useless-super-delegation
+        super(BasicShell, self).__init__(*args, **kwargs)
 
     def run(self):
         """Entry point method that launches our interactive shell.

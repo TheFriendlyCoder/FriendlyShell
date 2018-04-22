@@ -1,6 +1,7 @@
 venv*
 .pytest_cache/
 .idea/
+*.orig
 # Created by .ignore support plugin (hsz.mobi)
 ### macOS template
 # General
