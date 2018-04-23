@@ -21,11 +21,8 @@ class BasicLoggerMixin(object):
     https://docs.python.org/2/library/logging.html#logrecord-attributes
     https://docs.python.org/2/library/logging.html#logging-levels
     """
-    def __init__(self):
-        # TODO: Consider maybe merging this class with base_shell and force
-        # the caller to reconfigure the logging mechanics before instantiating
-        # and instance of the shell if customizations are needed
-        super(BasicLoggerMixin, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(BasicLoggerMixin, self).__init__(*args, **kwargs)
         self._log = logging.getLogger(__name__)
 
         # See if our global logger is already configured. If not, then

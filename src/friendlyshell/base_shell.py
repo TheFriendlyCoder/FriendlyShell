@@ -15,16 +15,28 @@ class BaseShell(object):
     """Common base class for all Friendly Shells
 
     Defines basic IO and interactive shell logic common to all Friendly Shells
-    """
 
-    def __init__(self):
-        super(BaseShell, self).__init__()
+    :param parent:
+        Optional parent shell which owns this shell. If none provided this
+        shell is assumed to be a parent or first level shell session with
+        no ancestry
+    """
+    def __init__(self, *args, **kwargs):
+        # First we pop our parent argument off the call stack so it doesn't
+        # propagate to the `object` base class. This needs to be done BEFORE
+        # delegating to `super` to initialize the other classes in our
+        # class hierarchy
+        self._parent = kwargs.pop("parent") if "parent" in kwargs else None
+
+        super(BaseShell, self).__init__(*args, **kwargs)
+
         # characters preceding the cursor when prompting for command entry
         self.prompt = '> '
-        # flag controlling whether the command loop should continue processing
-        # commands. If a command sets this flag to True, the main command loop
-        # will terminate
+
+        # Flag indicating whether this shell should be closed after the current
+        # command finishes processing
         self._done = False
+
         # Command parser API for parsing tokens from command lines
         self._parser = default_line_parser()
 
@@ -162,6 +174,25 @@ class BaseShell(object):
     def do_exit(self):
         """Terminates the command interpreter"""
         self.debug('Terminating interpreter...')
+        self._done = True
+
+        # See if our shell has any parents, and force them to quit too
+        if self._parent:
+            self._parent.do_exit()
+
+    def do_close(self):
+        """Terminates the currently running shell
+
+        If the current shell is a sub-shell spawned by another Friendly Shell
+        instance, control will return to the parent shell which will continue
+        running"""
+        self.debug(
+            'Closing shell %s (%s)',
+            self.__class__.__name__,
+            self.prompt)
+
+        # Return control back to the parent Friendly Shell or the console,
+        # whichever comes next in the shell's ancestry
         self._done = True
 
 
