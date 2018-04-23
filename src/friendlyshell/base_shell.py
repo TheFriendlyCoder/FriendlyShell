@@ -85,6 +85,10 @@ class BaseShell(object):
                 continue
             func = self._find_command(parser.command)
 
+            if not func:
+                self.error("Command not found: %s", parser.command)
+                continue
+
             try:
                 if parser.params:
                     if len(parser.params) < self._count_required_params(func):

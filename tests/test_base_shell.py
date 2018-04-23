@@ -123,6 +123,20 @@ def test_unhandled_exception(caplog):
         assert msg in caplog.text
 
 
+def test_missing_command(caplog):
+    caplog.set_level(logging.INFO)
+    expected_error = "Command not found"
+    expected_command_name = "fubar"
+    class test_class(BasicLoggerMixin, BaseShell):
+        pass
+    obj = test_class()
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.side_effect = [expected_command_name, 'exit']
+        obj.run()
+        assert MockInput.call_count == 2
+        assert expected_error in caplog.text
+        assert expected_command_name in caplog.text
+
 def test_command_exception(caplog):
     caplog.set_level(logging.INFO)
     expected_error = "Some weird thing just happened"
