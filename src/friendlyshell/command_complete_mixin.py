@@ -1,4 +1,5 @@
 """Mixin class that adds command completion to a friendly shell"""
+import os
 import inspect
 import platform
 from contextlib import contextmanager
@@ -9,13 +10,15 @@ try:  # pragma: no cover
         import pyreadline as readline
     else:
         import readline
+    # Truncate our history files to 1000 entries
+    readline.set_history_length(1000)
     AUTOCOMPLETE_ENABLED = True
 except ImportError:  # pragma: no cover
     AUTOCOMPLETE_ENABLED = False
 
 
 @contextmanager
-def auto_complete_manager(key, callback):  # pragma: no cover
+def auto_complete_manager(key, callback, history_file=None):  # pragma: no cover
     """Context manager for enabling command line auto-completion
 
     :param str key:
@@ -28,6 +31,9 @@ def auto_complete_manager(key, callback):  # pragma: no cover
         yield
         return
 
+    if os.path.exists(history_file) and hasattr(readline, "read_history_file"):
+        readline.read_history_file(history_file)
+
     # TODO: Consider whether we need to synchronize the
     # readline.get_completer_delims() with our command parser objects for
     # consistency
@@ -38,10 +44,16 @@ def auto_complete_manager(key, callback):  # pragma: no cover
     readline.parse_and_bind(key + ": complete")
 
     # Return control back to the caller
-    yield
+    try:
+        yield
+    finally:
+        # When the context manager goes out of scope,
+        # restore it's previous state
+        readline.set_completer(old_completer)
 
-    # When the context manager goes out of scope, restore it's previous state
-    readline.set_completer(old_completer)
+        # When finished, write our history to a file
+        if history_file:
+            readline.write_history_file(history_file)
 
 
 # pylint: disable=too-few-public-methods
@@ -268,6 +280,17 @@ class CommandCompleteMixin(object):  # pragma: no cover
                 exec_info=True
             )
             return None  # pylint: disable=lost-exception
+
+    def do_clear_history(self):
+        """Clears the history of previously used commands from this shell"""
+        if not AUTOCOMPLETE_ENABLED:
+            self.info("Command completion disabled.")
+            return
+
+        # We just clear the current history buffer. When the shell terminates
+        # it should write the history to the history file, which should write
+        # out an empty history file with maybe just an 'exit' command in it
+        readline.clear_history()
 
 
 if __name__ == "__main__":

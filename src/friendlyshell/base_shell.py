@@ -1,9 +1,13 @@
 """Common shell interaction logic shared between different shells"""
 import sys
+import os
 import inspect
 import pyparsing as pp
 from six.moves import input
 from friendlyshell.command_parsers import default_line_parser
+
+# Path where configuration data is stored for friendly shells
+CONFIG_FOLDER = os.path.expanduser(os.path.join("~", ".friendlyshell"))
 
 
 # pylint: disable=no-member
@@ -23,6 +27,20 @@ class BaseShell(object):
         self._done = False
         # Command parser API for parsing tokens from command lines
         self._parser = default_line_parser()
+
+    @property
+    def _config_folder(self):
+        """Gets the folder where config and log files should be stored
+
+        :rtype: :class:`str`
+        """
+        # Create our config folder with restricted access to everyone but the
+        # owner. This is just in case we write secrets to a log / history file
+        # by accident then only the current user can see it.
+        if not os.path.exists(CONFIG_FOLDER):
+            os.makedirs(CONFIG_FOLDER, 0o700)
+
+        return CONFIG_FOLDER
 
     def run(self):
         """Main entry point function that launches our command line interpreter

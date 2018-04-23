@@ -1,4 +1,5 @@
 """Generic interactive shell with online help and auto completion support"""
+import os
 from friendlyshell.base_shell import BaseShell
 from friendlyshell.shell_help_mixin import ShellHelpMixin
 from friendlyshell.command_complete_mixin import \
@@ -19,9 +20,15 @@ class BasicShell(
         termination of the shell is invoked by the user via 'exit' or some
         other failure event.
         """
+        # The history file for this shell should be named after the
+        # derived class, so that each Friendly Shell implementation has
+        # it's own unique history associated with it
+        history_filename = os.path.join(self._config_folder,
+                                        self.__class__.__name__ + ".hist")
 
         # Configure our auto-completion callback
-        with auto_complete_manager(self.complete_key, self._complete_callback):
+        with auto_complete_manager(self.complete_key, self._complete_callback,
+                                   history_filename):
             super(BasicShell, self).run()
 
 
