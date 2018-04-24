@@ -109,8 +109,6 @@ class BaseShell(object):
             self._done = True
             return None
 
-        return None
-
     def _execute_command(self, func, parser):
         """Calls a command function with a set of parsed parameters
 
@@ -118,16 +116,18 @@ class BaseShell(object):
         :param parser: The parsed command parameters to pass to the command
         """
         try:
+            num_params = len(parser.params) if parser.params else 0
+            if num_params < self._count_required_params(func):
+                msg = 'Command %s requires %s parameters but ' \
+                      '%s were provided.'
+                self.error(
+                    msg,
+                    func.__name__.replace("do_", ""),
+                    self._count_required_params(func),
+                    num_params)
+                return
+
             if parser.params:
-                if len(parser.params) < self._count_required_params(func):
-                    msg = 'Command %s requires %s parameters but ' \
-                          '%s were provided.'
-                    self.error(
-                        msg,
-                        func.__name__,
-                        self._count_required_params(func),
-                        len(parser.params))
-                    return
                 func(*parser.params)
             else:
                 func()
@@ -181,7 +181,6 @@ class BaseShell(object):
             values) for the given method
         :rtype: :class:`int`
         """
-
         if sys.version_info < (3, 3):  # pragma: no cover
             # TODO: Consider whether I should drop Python 3.0-3.3 support
             params = inspect.getargspec(cmd_method)  # pylint: disable=deprecated-method
