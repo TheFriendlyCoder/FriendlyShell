@@ -277,8 +277,8 @@ def test_command_too_many_params():
         assert MockInput.call_count == 2
 
 
-def test_command_missing_params():
-
+def test_command_missing_params(caplog):
+    caplog.set_level(logging.INFO)
     class test_class(BasicLoggerMixin, BaseShell):
         def do_something(self, my_param1, my_param2):
             pytest.fail("Test method should not be invoked")
@@ -289,7 +289,24 @@ def test_command_missing_params():
         MockInput.side_effect = ['something first', 'exit']
         obj.run()
         assert MockInput.call_count == 2
+        msg = "Command something requires 2 parameters but 1 were provided"
+        assert msg in caplog.text
 
+
+def test_command_no_params(caplog):
+    caplog.set_level(logging.INFO)
+    class test_class(BasicLoggerMixin, BaseShell):
+        def do_something(self, my_param1, my_param2):
+            pytest.fail("Test method should not be invoked")
+
+    obj = test_class()
+
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.side_effect = ['something', 'exit']
+        obj.run()
+        assert MockInput.call_count == 2
+        msg = "Command something requires 2 parameters but 0 were provided"
+        assert msg in caplog.text
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])
