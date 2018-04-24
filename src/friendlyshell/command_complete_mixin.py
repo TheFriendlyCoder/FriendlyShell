@@ -7,12 +7,15 @@ from contextlib import contextmanager
 
 try:  # pragma: no cover
     if platform.system() == 'Windows':
-        # TODO: Test this on a Windows platform
-        import pyreadline as readline
+        import pyreadline.rlmain  # pylint: disable=unused-import
+        import readline
+        import pyreadline.unicode_helper  # pylint: disable=unused-import
     else:
         import readline
+
     # Truncate our history files to 1000 entries
     readline.set_history_length(1000)
+
     AUTOCOMPLETE_ENABLED = True
 except ImportError:  # pragma: no cover
     AUTOCOMPLETE_ENABLED = False
