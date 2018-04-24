@@ -14,9 +14,13 @@ class MyShell (BasicShell):
     def do_subshell(self):
         tmp = MySubShell(parent=self)
         tmp.prompt = "(child)> "
-        return tmp.run()
+        return tmp.run(input_stream=self.input_stream)
 
 
 if __name__ == "__main__":
     obj = MyShell()
-    obj.run()
+
+    # obj.run()
+    # exit()
+    with open("test.fsh", "r") as fh:
+        obj.run(input_stream=fh)

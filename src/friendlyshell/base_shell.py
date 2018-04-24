@@ -40,6 +40,16 @@ class BaseShell(object):
         # Command parser API for parsing tokens from command lines
         self._parser = default_line_parser()
 
+        self._input_stream = None
+
+    @property
+    def input_stream(self):
+        """Gets the input source where commands are parsed for this shell
+
+        May return None if no input stream attached to this shell
+        """
+        return self._input_stream
+
     @property
     def _config_folder(self):
         """Gets the folder where config and log files should be stored
@@ -54,62 +64,112 @@ class BaseShell(object):
 
         return CONFIG_FOLDER
 
-    def run(self):
+    def _get_input(self):
+        """Gets input to be processed from the appropriate source
+
+        :returns: the input line retrieved from the source
+        :rtype: :class:`str`
+        """
+        line = None
+        try:
+            if self.input_stream:
+                line = self.input_stream.readline()
+                if not line:
+                    raise EOFError()
+                self.info(self.prompt + line)
+            else:
+                line = input(self.prompt)
+            return line
+        except KeyboardInterrupt:
+            # When the user enters CTRL+C to terminate the shell, we just
+            # terminate the currently running shell. That way if there is
+            # a parent shell in play control can be returned to it so the
+            # user can attempt to recover from whatever operation they
+            # tried to abort
+            self._done = True
+            return None
+        except EOFError:
+            # When reading from an input stream, see if we've reached the
+            # end of the stream. If so, assume we are meant to terminate
+            # the shell and return control back to the caller. This avoids
+            # having to force the user to always end their non-interactive
+            # scripts with an 'exit' command at the end
+            self.do_exit()
+            return None
+        except Exception as err:  # pylint: disable=broad-except
+            self.error(
+                'Unexpected error during input sequence: %s',
+                err
+            )
+
+            # Reserve the detailed debug info / stack trace to the debug
+            # output only. This avoids spitting out lots of technical
+            # garbage to the user
+            self.debug(err, exc_info=True)
+            self._done = True
+            return None
+
+        return None
+
+    def _execute_command(self, func, parser):
+        """Calls a command function with a set of parsed parameters
+
+        :param func: the command function to execute
+        :param parser: The parsed command parameters to pass to the command
+        """
+        try:
+            if parser.params:
+                if len(parser.params) < self._count_required_params(func):
+                    msg = 'Command %s requires %s parameters but ' \
+                          '%s were provided.'
+                    self.error(
+                        msg,
+                        func.__name__,
+                        self._count_required_params(func),
+                        len(parser.params))
+                    return
+                func(*parser.params)
+            else:
+                func()
+        except Exception as err:  # pylint: disable=broad-except
+            # Log summary info about the error to standard error output
+            self.error('Unknown error detected: %s', err)
+            # Reserve the detailed debug info / stack trace to the debug
+            # output only. This avoids spitting out lots of technical
+            # garbage to the user
+            self.debug(err, exc_info=True)
+
+    def run(self, *_args, **kwargs):
         """Main entry point function that launches our command line interpreter
 
         This method will wait for input to be given via the command line, and
         process each command provided until a request to terminate the shell is
         given.
-        """
-        while not self._done:
-            try:
-                line = input(self.prompt)
-            except KeyboardInterrupt:
-                self._done = True
-                continue
-            except Exception as err:  # pylint: disable=broad-except
-                self.error(
-                    'Unexpected error during input sequence: %s',
-                    err
-                )
 
-                # Reserve the detailed debug info / stack trace to the debug
-                # output only. This avoids spitting out lots of technical
-                # garbage to the user
-                self.debug(err, exc_info=True)
-                self._done = True
+        :param input_stream:
+            optional Python input stream object where commands should be loaded
+            from. Typically this will be a file-like object containing commands
+            to be run, but any input stream object should work.
+            If not provided, input will be read from stdin using :meth:`input`
+        """
+        self._input_stream = \
+            kwargs.pop("input_stream") if "input_stream" in kwargs else None
+
+        while not self._done:
+            line = self._get_input()
+            if not line:
                 continue
 
             parser = self._parse_line(line)
             if parser is None:
                 continue
-            func = self._find_command(parser.command)
 
+            func = self._find_command(parser.command)
             if not func:
                 self.error("Command not found: %s", parser.command)
                 continue
 
-            try:
-                if parser.params:
-                    if len(parser.params) < self._count_required_params(func):
-                        msg = 'Command %s requires %s parameters but ' \
-                              '%s were provided.'
-                        self.error(
-                            msg,
-                            func.__name__,
-                            self._count_required_params(func),
-                            len(parser.params))
-                        continue
-                    func(*parser.params)
-                else:
-                    func()
-            except Exception as err:  # pylint: disable=broad-except
-                # Log summary info about the error to standard error output
-                self.error('Unknown error detected: %s', err)
-                # Reserve the detailed debug info / stack trace to the debug
-                # output only. This avoids spitting out lots of technical
-                # garbage to the user
-                self.debug(err, exc_info=True)
+            self._execute_command(func, parser)
 
     def _count_required_params(self, cmd_method):
         """Gets the number of required parameters from a command method
