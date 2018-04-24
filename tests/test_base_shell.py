@@ -1,8 +1,10 @@
+from __future__ import unicode_literals
 import logging
 from friendlyshell.base_shell import BaseShell
 from friendlyshell.basic_logger_mixin import BasicLoggerMixin
 from mock import patch
 import pytest
+from io import StringIO
 
 
 def test_defaults():
@@ -60,6 +62,97 @@ def test_simple_run_exit():
         obj.run()
         MockInput.assert_called_once()
 
+
+@pytest.mark.timeout(5)
+def test_simple_run_input_stream(caplog):
+    expected_message = "My output from my command"
+    class MyShell(BasicLoggerMixin, BaseShell):
+        def do_my_cmd(self):
+            self.info(expected_message)
+
+    obj = MyShell()
+    in_stream = StringIO("""my_cmd
+    exit""")
+
+    obj.run(input_stream=in_stream)
+    assert expected_message in caplog.text
+
+@pytest.mark.timeout(5)
+def test_run_input_stream_no_exit(caplog):
+    expected_message = "My output from my command"
+
+    class MyShell(BasicLoggerMixin, BaseShell):
+        def do_my_cmd(self):
+            self.info(expected_message)
+
+    obj = MyShell()
+    in_stream = StringIO("""my_cmd""")
+
+    obj.run(input_stream=in_stream)
+    assert expected_message in caplog.text
+
+
+@pytest.mark.timeout(5)
+def test_run_input_stream_nested_exit(caplog):
+    expected_message1 = "My output from my command"
+    expected_message2 = "My Subcommand Output"
+
+    class SubShell(BasicLoggerMixin, BaseShell):
+        def do_my_sub_op(self):
+            self.info(expected_message2)
+
+    class MyShell(BasicLoggerMixin, BaseShell):
+        def do_my_cmd(self):
+            self.info(expected_message1)
+
+        def do_my_subshell(self):
+            tmp = SubShell()
+            tmp.run(input_stream=self.input_stream)
+
+    obj = MyShell()
+    in_stream = StringIO("""my_cmd
+    my_subshell
+    my_sub_op
+    exit""")
+
+    obj.run(input_stream=in_stream)
+    assert expected_message1 in caplog.text
+    assert expected_message2 in caplog.text
+
+
+@pytest.mark.timeout(5)
+def test_run_input_stream_subshell_close(caplog):
+    expected_message1 = "My output from my command"
+    expected_message2 = "My Subcommand Output"
+    expected_message3 = "Here's the other parents output"
+
+    class SubShell(BasicLoggerMixin, BaseShell):
+        def do_my_sub_op(self):
+            self.info(expected_message2)
+
+    class MyShell(BasicLoggerMixin, BaseShell):
+        def do_my_cmd(self):
+            self.info(expected_message1)
+
+        def do_my_other_cmd(self):
+            self.info(expected_message3)
+
+        def do_my_subshell(self):
+            tmp = SubShell()
+            tmp.run(input_stream=self.input_stream)
+
+    obj = MyShell()
+    in_stream = StringIO("""my_cmd
+    my_subshell
+    my_sub_op
+    close
+    my_other_cmd
+    exit""")
+
+    obj.run(input_stream=in_stream)
+    assert expected_message1 in caplog.text
+    assert expected_message2 in caplog.text
+    assert expected_message3 in caplog.text
 
 def test_simple_nested_exit():
     class SubShell(BasicLoggerMixin, BaseShell):

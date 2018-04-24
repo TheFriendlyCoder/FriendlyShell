@@ -13,7 +13,7 @@ class BasicShell(
     def __init__(self, *args, **kwargs):  # pylint: disable=useless-super-delegation
         super(BasicShell, self).__init__(*args, **kwargs)
 
-    def run(self):
+    def run(self, *args, **kwargs):
         """Entry point method that launches our interactive shell.
 
         Input will be processed from the console to execute commands, until
@@ -29,7 +29,7 @@ class BasicShell(
         # Configure our auto-completion callback
         with auto_complete_manager(self.complete_key, self._complete_callback,
                                    history_filename):
-            super(BasicShell, self).run()
+            super(BasicShell, self).run(*args, **kwargs)
 
 
 if __name__ == "__main__":
