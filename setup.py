@@ -63,7 +63,11 @@ setup(
                 "interfaces, similar to the 'cmd' built in class.",
     long_description=open('README.rst').read(),
     url='https://github.com/TheFriendlyCoder/FriendlyShell',
-    install_requires=['pyparsing', 'tabulate'],
+    install_requires=[
+        'pyparsing',
+        'tabulate',
+        'pyreadline; platform_system == "Windows"'
+    ],
     keywords='cmd command line shell interactive interpreter',
     license="GPL",
     classifiers=[
