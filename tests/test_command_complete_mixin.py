@@ -1,10 +1,11 @@
 from friendlyshell.base_shell import BaseShell
 from friendlyshell.command_complete_mixin import CommandCompleteMixin
+from friendlyshell.basic_logger_mixin import BasicLoggerMixin
 import pytest
 
 
 def test_complete_command_names():
-    class MyShell(BaseShell, CommandCompleteMixin):
+    class MyShell(BaseShell, CommandCompleteMixin, BasicLoggerMixin):
         def do_something(self):
             """Here's online help"""
             pass
