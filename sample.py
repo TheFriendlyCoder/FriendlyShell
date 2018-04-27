@@ -8,6 +8,24 @@ class MySubShell(BasicShell):
 
 
 class MyShell (BasicShell):
+
+    def complete_parent_op(self, parser, index, len):
+        # print("In completer...")
+        self.debug(str(parser))
+        self.debug(str(index))
+        self.debug(str(len))
+        options = [
+            "Hello",
+            "Howdy",
+            "HellNo",
+            "World",
+            "FuBar",
+            "Johnathan",
+            "JohnDoe",
+        ]
+
+        return [i for i in options if i.startswith(parser[index])]
+
     def do_parent_op(self):
         print("Parent op1")
 
@@ -20,7 +38,7 @@ class MyShell (BasicShell):
 if __name__ == "__main__":
     obj = MyShell()
 
-    # obj.run()
-    # exit()
+    obj.run()
+    exit()
     with open("test.fsh", "r") as fh:
         obj.run(input_stream=fh)

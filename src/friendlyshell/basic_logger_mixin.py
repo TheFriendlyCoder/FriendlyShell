@@ -47,8 +47,10 @@ class BasicLoggerMixin(object):
         # with metadata for later debugging purposes
         log_file = os.path.join(os.getcwd(), "friendlyshell.log")
         file_handler = logging.FileHandler(log_file, 'w')
+        # fmt = '%(asctime)s %(levelname)s ' \
+        #       '(%(name)s.%(funcName)s.%(lineno)d) ' \
+        #       '%(message)s'
         fmt = '%(asctime)s %(levelname)s ' \
-              '(%(name)s.%(funcName)s.%(lineno)d) ' \
               '%(message)s'
         file_formatter = logging.Formatter(fmt=fmt)
         file_handler.setFormatter(file_formatter)
