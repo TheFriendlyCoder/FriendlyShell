@@ -1,5 +1,6 @@
 """Common shell interaction logic shared between different shells"""
 import os
+import sys
 import inspect
 import pyparsing as pp
 from six.moves import input
@@ -173,8 +174,7 @@ class BaseShell(object):
 
             self._execute_command(func, parser)
 
-    @staticmethod
-    def _count_required_params(cmd_method):
+    def _count_required_params(self, cmd_method):
         """Gets the number of required parameters from a command method
 
         :param cmd_method:
@@ -184,6 +184,18 @@ class BaseShell(object):
             values) for the given method
         :rtype: :class:`int`
         """
+        if sys.version_info < (3, 3):
+            params = inspect.getargspec(cmd_method)  # pylint: disable=deprecated-method
+            self.debug(
+                'Command %s params are: %s',
+                cmd_method.__name__,
+                params)
+            tmp = params.args
+
+            if 'self' in tmp:
+                tmp.remove('self')
+            return len(tmp) - (len(params.defaults) if params.defaults else 0)
+
         func_sig = inspect.signature(cmd_method)  # pylint: disable=no-member
         retval = 0
         for cur_param in func_sig.parameters.values():
@@ -191,8 +203,7 @@ class BaseShell(object):
                 retval += 1
         return retval
 
-    @staticmethod
-    def _count_params(cmd_method):
+    def _count_params(self, cmd_method):
         """Gets the total number of parameters from a command method
 
         :param cmd_method:
@@ -201,6 +212,18 @@ class BaseShell(object):
             Number of parameters supported by the given method
         :rtype: :class:`int`
         """
+        if sys.version_info < (3, 3):
+            params = inspect.getargspec(cmd_method)  # pylint: disable=deprecated-method
+            self.debug(
+                'Command %s params are: %s',
+                cmd_method.__name__,
+                params)
+            tmp = params.args
+
+            if 'self' in tmp:
+                tmp.remove('self')
+            return len(tmp)
+
         func_sig = inspect.signature(cmd_method)  # pylint: disable=no-member
         return len(func_sig.parameters)
 
