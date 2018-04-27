@@ -289,7 +289,7 @@ def test_command_missing_params(caplog):
         MockInput.side_effect = ['something first', 'exit']
         obj.run()
         assert MockInput.call_count == 2
-        msg = "Command something requires 2 parameters but 1 were provided"
+        msg = "Command something requires 2 of 2 parameters but 1 were provided"
         assert msg in caplog.text
 
 
@@ -305,7 +305,7 @@ def test_command_no_params(caplog):
         MockInput.side_effect = ['something', 'exit']
         obj.run()
         assert MockInput.call_count == 2
-        msg = "Command something requires 2 parameters but 0 were provided"
+        msg = "Command something requires 2 of 2 parameters but 0 were provided"
         assert msg in caplog.text
 
 if __name__ == "__main__":
