@@ -53,6 +53,7 @@ def test_find_missing_command():
     assert res is None
 
 
+@pytest.mark.timeout(5)
 def test_simple_run_exit():
     class MyShell(BasicLoggerMixin, BaseShell):
         pass
@@ -289,7 +290,7 @@ def test_command_missing_params(caplog):
         MockInput.side_effect = ['something first', 'exit']
         obj.run()
         assert MockInput.call_count == 2
-        msg = "Command something requires 2 parameters but 1 were provided"
+        msg = "Command something requires 2 of 2 parameters but 1 were provided"
         assert msg in caplog.text
 
 
@@ -305,8 +306,9 @@ def test_command_no_params(caplog):
         MockInput.side_effect = ['something', 'exit']
         obj.run()
         assert MockInput.call_count == 2
-        msg = "Command something requires 2 parameters but 0 were provided"
+        msg = "Command something requires 2 of 2 parameters but 0 were provided"
         assert msg in caplog.text
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])

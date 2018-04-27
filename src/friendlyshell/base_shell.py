@@ -1,6 +1,6 @@
 """Common shell interaction logic shared between different shells"""
-import sys
 import os
+import sys
 import inspect
 import pyparsing as pp
 from six.moves import input
@@ -117,13 +117,16 @@ class BaseShell(object):
         """
         try:
             num_params = len(parser.params) if parser.params else 0
-            if num_params < self._count_required_params(func):
-                msg = 'Command %s requires %s parameters but ' \
+            required_params = self._count_required_params(func)
+            all_params = self._count_params(func)
+            if not required_params <= num_params <= all_params:
+                msg = 'Command %s requires %s of %s parameters but ' \
                       '%s were provided.'
                 self.error(
                     msg,
                     func.__name__.replace("do_", ""),
-                    self._count_required_params(func),
+                    required_params,
+                    all_params,
                     num_params)
                 return
 
@@ -181,15 +184,14 @@ class BaseShell(object):
             values) for the given method
         :rtype: :class:`int`
         """
-        if sys.version_info < (3, 3):  # pragma: no cover
-            # TODO: Consider whether I should drop Python 3.0-3.3 support
+        if sys.version_info < (3, 3):
             params = inspect.getargspec(cmd_method)  # pylint: disable=deprecated-method
             self.debug(
                 'Command %s params are: %s',
                 cmd_method.__name__,
-                params
-            )
+                params)
             tmp = params.args
+
             if 'self' in tmp:
                 tmp.remove('self')
             return len(tmp) - (len(params.defaults) if params.defaults else 0)
@@ -200,6 +202,30 @@ class BaseShell(object):
             if cur_param.default is inspect.Parameter.empty:  # pylint: disable=no-member
                 retval += 1
         return retval
+
+    def _count_params(self, cmd_method):
+        """Gets the total number of parameters from a command method
+
+        :param cmd_method:
+            :class:`inspect.Signature` for method to analyse
+        :returns:
+            Number of parameters supported by the given method
+        :rtype: :class:`int`
+        """
+        if sys.version_info < (3, 3):
+            params = inspect.getargspec(cmd_method)  # pylint: disable=deprecated-method
+            self.debug(
+                'Command %s params are: %s',
+                cmd_method.__name__,
+                params)
+            tmp = params.args
+
+            if 'self' in tmp:
+                tmp.remove('self')
+            return len(tmp)
+
+        func_sig = inspect.signature(cmd_method)  # pylint: disable=no-member
+        return len(func_sig.parameters)
 
     def _parse_line(self, line):
         """Parses a single line of command text and returns the parsed output
