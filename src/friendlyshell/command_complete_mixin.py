@@ -290,6 +290,7 @@ class CommandCompleteMixin(object):  # pragma: no cover
             Returns None if there are no matches for the given token
         """
         try:
+            line = readline.get_line_buffer()
             # ------------------------- DEBUG OUTPUT ---------------------------
             # NOTE: The begidx and endidx parameters specify the start and end+1
             #       location of the sub-string
@@ -303,7 +304,7 @@ class CommandCompleteMixin(object):  # pragma: no cover
             self.debug('\t\tSelected token "%s"', token)
             self.debug('\t\tMatch to return "%s"', index)
             # All text currently entered at the prompt, less the prompt itself
-            self.debug('\t\tline "%s"', readline.get_line_buffer())
+            self.debug('\t\tline "%s"', line)
             # represents the offset from the start of the string to the first
             # character in the token to process
             self.debug('\t\tBeginning index "%s"', readline.get_begidx())
@@ -315,7 +316,10 @@ class CommandCompleteMixin(object):  # pragma: no cover
             #       this index would be: len(line) + 1
             self.debug('\t\tEnding index "%s"', readline.get_endidx())
             # ------------------------------------------------------------------
-
+            if readline.get_line_buffer()[0] == "!":
+                self.debug(
+                    "Processing subcommand '%s'. Skipping command expansion.",
+                    line)
             if index != 0:
                 if index >= len(self._latest_matches):
                     self.debug('Completed auto completion routine.')

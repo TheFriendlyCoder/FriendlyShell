@@ -51,7 +51,22 @@ class ShellHelpMixin(object):
                 else:
                     command_list['Extended Help'].append('N/A')
 
+        self.info("COMMANDS")
         self.info(tabulate.tabulate(command_list, headers="keys"))
+
+    def _list_operators(self):
+        """Displays a list of built-in operators supported by Friendly Shell"""
+        operator_list = {
+            'Operator': ["!"],
+            'Description': [
+                "Redirects command to the native console"
+            ],
+            'Examples': [
+                "'!dir /ah', '!ls -alh'"
+            ]
+        }
+        self.info("OPERATORS")
+        self.info(tabulate.tabulate(operator_list, headers="keys"))
 
     def do_help(self, arg=None):
         """Online help generation (this command)
@@ -62,8 +77,10 @@ class ShellHelpMixin(object):
         """
         # no command given, show available commands
         if arg is None:
-            self.debug("Showing help for available commands...")
+            self.debug("Showing default help output...")
             self._list_commands()
+            self.info("\n")
+            self._list_operators()
             return
 
         # Sanity check: make sure we're asking for help for a command

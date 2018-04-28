@@ -2,6 +2,7 @@
 import os
 import sys
 import inspect
+import subprocess
 import pyparsing as pp
 from six.moves import input
 from friendlyshell.command_parsers import default_line_parser
@@ -70,7 +71,6 @@ class BaseShell(object):
         :returns: the input line retrieved from the source
         :rtype: :class:`str`
         """
-        line = None
         try:
             if self.input_stream:
                 line = self.input_stream.readline()
@@ -142,6 +142,22 @@ class BaseShell(object):
             # garbage to the user
             self.debug(err, exc_info=True)
 
+    def _run_shell_command(self, cmd):
+        """Executes a shell command within the Friendly Shell environment
+
+        :param str cmd: Shell command to execute
+        """
+        self.debug("Running shell command %s", cmd)
+        try:
+            output = subprocess.check_output(
+                cmd,
+                shell=True,
+                stderr=subprocess.STDOUT)
+            self.info(output)
+        except subprocess.CalledProcessError as err:
+            self.info("Failed to run command %s: %s", err.cmd, err.returncode)
+            self.info(err.output)
+
     def run(self, *_args, **kwargs):
         """Main entry point function that launches our command line interpreter
 
@@ -161,6 +177,10 @@ class BaseShell(object):
         while not self._done:
             line = self._get_input()
             if not line:
+                continue
+
+            if line[0] == "!":
+                self._run_shell_command(line[1:])
                 continue
 
             parser = self._parse_line(line)

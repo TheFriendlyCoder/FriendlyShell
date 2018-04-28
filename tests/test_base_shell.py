@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 import logging
+import sys
+import os
 from friendlyshell.base_shell import BaseShell
 from friendlyshell.basic_logger_mixin import BasicLoggerMixin
 from mock import patch
@@ -309,6 +311,47 @@ def test_command_no_params(caplog):
         msg = "Command something requires 2 of 2 parameters but 0 were provided"
         assert msg in caplog.text
 
+
+def test_shell_command(caplog):
+    caplog.set_level(logging.INFO)
+    class test_class(BasicLoggerMixin, BaseShell):
+        pass
+
+    obj = test_class()
+    if sys.platform.startswith("win"):
+        test_cmd = "dir /a"
+    else:
+        test_cmd = "ls -a"
+
+    in_stream = StringIO("""!{0}
+        exit""".format(test_cmd))
+
+    obj.run(input_stream=in_stream)
+
+    for cur_item in os.listdir("."):
+        assert cur_item in caplog.text
+
+
+def test_shell_command_not_found(caplog):
+    caplog.set_level(logging.INFO)
+    expected_text = "Hello World"
+    class test_class(BasicLoggerMixin, BaseShell):
+        def do_something(self):
+            self.info(expected_text)
+
+    obj = test_class()
+    expected_command = "fubarasdf1234"
+    in_stream = StringIO("""!{0}
+        something
+        exit""".format(expected_command))
+
+    obj.run(input_stream=in_stream)
+
+    # Make sure the second command in the sequence rance
+    assert expected_text in caplog.text
+    if sys.platform.startswith("win"):
+        assert "not recognized" in caplog.text
+    assert expected_command in caplog.text
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])
