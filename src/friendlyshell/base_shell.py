@@ -145,6 +145,13 @@ class BaseShell(object):
             # output only. This avoids spitting out lots of technical
             # garbage to the user
             self.debug(err, exc_info=True)
+        except KeyboardInterrupt:
+            self.debug("User interrupted operation...")
+            # Typically, when a user cancels an operation there will be at
+            # least some partial output gemerated by the command so we
+            # write out a blank to ensure the interactive prompt appears on
+            # the line below
+            self.info("")
 
     def _run_shell_command(self, cmd):
         """Executes a shell command within the Friendly Shell environment
@@ -161,6 +168,13 @@ class BaseShell(object):
         except subprocess.CalledProcessError as err:
             self.info("Failed to run command %s: %s", err.cmd, err.returncode)
             self.info(err.output)
+        except KeyboardInterrupt:
+            self.debug("User interrupted operation...")
+            # Typically, when a user cancels an operation there will be at
+            # least some partial output gemerated by the command so we
+            # write out a blank to ensure the interactive prompt appears on
+            # the line below
+            self.info("")
 
     def run(self, *_args, **kwargs):
         """Main entry point function that launches our command line interpreter
