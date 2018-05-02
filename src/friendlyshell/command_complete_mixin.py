@@ -15,7 +15,7 @@ try:  # pragma: no cover
 
     # Truncate our history files to 1000 entries
     readline.set_history_length(1000)
-    # readline.set_completer_delims(" ")
+    readline.set_completer_delims(" ")
     AUTOCOMPLETE_ENABLED = True
 except ImportError:  # pragma: no cover
     AUTOCOMPLETE_ENABLED = False
