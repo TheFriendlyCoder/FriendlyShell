@@ -193,11 +193,11 @@ class CommandCompleteMixin(object):  # pragma: no cover
             parser.params[param_index])
         return param_index
 
-    def _get_completions(self, tmp_method, parser, param_index, token):
+    def _get_completions(self, tmp_method, parser, param_index):
         """Gets a list of possible matches for a given command parameter"""
         self.debug(
             '\tCalling into auto completion method %s...', tmp_method.__name__)
-        retval = tmp_method(parser.params, param_index, len(token))
+        retval = tmp_method(parser.params, param_index)
         self.debug('Found matches: %s', retval)
 
         # Sanity Check: command completion methods MUST always return a list of
@@ -260,7 +260,7 @@ class CommandCompleteMixin(object):  # pragma: no cover
 
         # Call our auto-completion helper method to get a list of possible
         # matches to the partially entered parameter
-        return self._get_completions(tmp_method, parser, param_index, token)
+        return self._get_completions(tmp_method, parser, param_index)
 
     def _complete_callback(self, token, index):
         """Autocomplete method called by readline library to retrieve candidates
