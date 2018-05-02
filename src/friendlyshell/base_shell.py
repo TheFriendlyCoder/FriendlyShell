@@ -34,6 +34,10 @@ class BaseShell(object):
         # characters preceding the cursor when prompting for command entry
         self.prompt = '> '
 
+        # text to be displayed upon launch of the shell, before displaying
+        # the interactive prompt
+        self.banner_text = None
+
         # Flag indicating whether this shell should be closed after the current
         # command finishes processing
         self._done = False
@@ -173,6 +177,9 @@ class BaseShell(object):
         """
         self._input_stream = \
             kwargs.pop("input_stream") if "input_stream" in kwargs else None
+
+        if self.banner_text:
+            self.info(self.banner_text)
 
         while not self._done:
             line = self._get_input()

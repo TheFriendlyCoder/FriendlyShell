@@ -9,6 +9,10 @@ class MySubShell(BasicShell):
 
 class MyShell (BasicShell):
 
+    def __init__(self, *args, **kwargs):
+        super(MyShell, self).__init__(*args, **kwargs)
+        self.banner_text = "My Sample Shell v1.0"
+
     def complete_parent_op(self, parser, index, len):
         # print("In completer...")
         self.debug(str(parser))
