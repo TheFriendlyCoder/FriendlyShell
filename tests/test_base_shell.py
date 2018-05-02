@@ -430,6 +430,27 @@ def test_keyboard_interrupt_shell(caplog):
             assert MockInput.call_count == 2
             assert unexpected_text not in caplog.text
 
+def test_env_var_expansion(caplog):
+    caplog.set_level(logging.INFO)
+    expected_text = "Performing test command..."
+    class MyShell(BasicLoggerMixin, BaseShell):
+        def do_somecmd(self):
+            self.info(expected_text)
+    obj = MyShell()
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.side_effect = [
+            '$FSHELL_TEST',
+            'exit'
+            ]
+        try:
+            import os
+            os.environ["FSHELL_TEST"] = "somecmd"
+            obj.run()
+        finally:
+            del(os.environ["FSHELL_TEST"])
+        assert MockInput.call_count == 2
+        assert expected_text in caplog.text
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])
