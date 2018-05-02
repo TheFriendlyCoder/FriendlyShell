@@ -122,10 +122,10 @@ class ShellHelpMixin(object):
         # anywhere in the class hierarchy
         self.info('No online help for command "%s"', arg)
 
-    def complete_help(self, parser, parameter_index, cursor_position):
+    def complete_help(self, parser, parameter_index):
         """Automatic completion method for the 'help' command"""
         return self._complete_command_names(
-            parser[parameter_index][:cursor_position])
+            parser[parameter_index])
 
     def help_help(self):
         """Generates inline help for the 'help' command"""

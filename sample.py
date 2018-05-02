@@ -13,11 +13,10 @@ class MyShell (BasicShell):
         super(MyShell, self).__init__(*args, **kwargs)
         self.banner_text = "My Sample Shell v1.0"
 
-    def complete_parent_op(self, parser, index, len):
+    def complete_parent_op(self, parser, index):
         # print("In completer...")
-        self.debug(str(parser))
+        self.debug(str(params))
         self.debug(str(index))
-        self.debug(str(len))
         options = [
             "Hello",
             "Howdy",
@@ -28,7 +27,7 @@ class MyShell (BasicShell):
             "JohnDoe",
         ]
 
-        return [i for i in options if i.startswith(parser[index])]
+        return [i for i in options if i.startswith(params[index])]
 
     def do_parent_op(self):
         print("Parent op1")
