@@ -186,6 +186,10 @@ class BaseShell(object):
             if not line:
                 continue
 
+            # Before we process our command input, see if we need to
+            # substitute any environment variables that may be used
+            line = os.path.expandvars(line)
+
             if line[0] == "!":
                 self._run_shell_command(line[1:])
                 continue
