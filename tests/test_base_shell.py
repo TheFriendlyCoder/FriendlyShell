@@ -111,7 +111,7 @@ def test_run_input_stream_nested_exit(caplog):
 
         def do_my_subshell(self):
             tmp = SubShell()
-            tmp.run(input_stream=self.input_stream)
+            self.run_subshell(tmp)
 
     obj = MyShell()
     in_stream = StringIO("""my_cmd
@@ -143,7 +143,7 @@ def test_run_input_stream_subshell_close(caplog):
 
         def do_my_subshell(self):
             tmp = SubShell()
-            tmp.run(input_stream=self.input_stream)
+            self.run_subshell(tmp)
 
     obj = MyShell()
     in_stream = StringIO("""my_cmd
@@ -158,19 +158,25 @@ def test_run_input_stream_subshell_close(caplog):
     assert expected_message2 in caplog.text
     assert expected_message3 in caplog.text
 
+@pytest.mark.timeout(5)
 def test_simple_nested_exit():
+    expected_text = "Ran method successfully"
     class SubShell(BasicLoggerMixin, BaseShell):
-        pass
+        def do_subop(self):
+            self.info(expected_text)
     class MyShell(BasicLoggerMixin, BaseShell):
         def do_mysubshell (self):
-            temp = SubShell(parent=self)
-            return temp.run()
+            temp = SubShell()
+            self.run_subshell(temp)
 
     obj = MyShell()
-    with patch('friendlyshell.base_shell.input') as MockInput:
-        MockInput.side_effect = ['mysubshell', 'exit']
-        obj.run()
-        assert MockInput.call_count == 2
+
+    in_stream = StringIO("""mysubshell
+        subop
+        exit""")
+
+    obj.run(input_stream=in_stream)
+
 
 
 def test_simple_run_close():

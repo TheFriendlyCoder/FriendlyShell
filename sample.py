@@ -3,6 +3,10 @@ from friendlyshell.basic_shell import BasicShell
 
 
 class MySubShell(BasicShell):
+    def __init__(self, *args, **kwargs):
+        super(MySubShell, self).__init__(*args, **kwargs)
+        self.prompt = "(child)> "
+
     def do_sub_op(self):
         print("Child sub op1")
 
@@ -33,9 +37,8 @@ class MyShell (BasicShell):
         print("Parent op1")
 
     def do_subshell(self):
-        tmp = MySubShell(parent=self)
-        tmp.prompt = "(child)> "
-        return tmp.run(input_stream=self.input_stream)
+        tmp = MySubShell()
+        return self.run_subshell(tmp)
 
 
 if __name__ == "__main__":
