@@ -353,5 +353,23 @@ def test_shell_command_not_found(caplog):
         assert "not recognized" in caplog.text
     assert expected_command in caplog.text
 
+
+@pytest.mark.timeout(5)
+def test_banner_text(caplog):
+    caplog.set_level(logging.INFO)
+    expected_banner_text = "Here's my awesome banner!"
+    class MyShell(BasicLoggerMixin, BaseShell):
+        def __init__(self, *args, **kwargs):
+            super(MyShell, self).__init__(*args, **kwargs)
+            self.banner_text = expected_banner_text
+    obj = MyShell()
+
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.return_value = 'exit'
+        obj.run()
+        MockInput.assert_called_once()
+        assert expected_banner_text in caplog.text
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])
