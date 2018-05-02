@@ -7,6 +7,7 @@ from friendlyshell.basic_logger_mixin import BasicLoggerMixin
 from mock import patch
 import pytest
 from io import StringIO
+import subprocess
 
 
 def test_defaults():
@@ -372,6 +373,63 @@ def test_banner_text(caplog):
 
 
 @pytest.mark.timeout(5)
+def test_keyboard_interrupt_command(caplog):
+    caplog.set_level(logging.INFO)
+    expected_text = "Here's my awesome banner!"
+    class MyShell(BasicLoggerMixin, BaseShell):
+        def do_op1(self):
+            raise KeyboardInterrupt()
+        def do_op2(self):
+            self.info(expected_text)
+
+    obj = MyShell()
+
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.side_effect = [
+            "op1",
+            "op2",
+            'exit'
+            ]
+        obj.run()
+        assert MockInput.call_count == 3
+        assert expected_text in caplog.text
+
+
+@pytest.mark.timeout(5)
+def test_keyboard_interrupt_input(caplog):
+    caplog.set_level(logging.INFO)
+    class MyShell(BasicLoggerMixin, BaseShell):
+        pass
+
+    obj = MyShell()
+
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.side_effect = KeyboardInterrupt()
+        obj.run()
+        MockInput.assert_called_once()
+
+
+@pytest.mark.timeout(5)
+def test_keyboard_interrupt_shell(caplog):
+    caplog.set_level(logging.INFO)
+    class MyShell(BasicLoggerMixin, BaseShell):
+        pass
+
+    obj = MyShell()
+
+    unexpected_text = "My Test Output Here"
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        with patch('friendlyshell.base_shell.subprocess') as MockProc:
+            MockProc.check_output.side_effect = KeyboardInterrupt()
+            MockProc.CalledProcessError = subprocess.CalledProcessError
+            MockInput.side_effect = [
+                "!echo " + unexpected_text,
+                'exit'
+                ]
+            obj.run()
+            assert MockInput.call_count == 2
+            assert unexpected_text not in caplog.text
+
 def test_env_var_expansion(caplog):
     caplog.set_level(logging.INFO)
     expected_text = "Performing test command..."
@@ -392,6 +450,7 @@ def test_env_var_expansion(caplog):
             del(os.environ["FSHELL_TEST"])
         assert MockInput.call_count == 2
         assert expected_text in caplog.text
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])
