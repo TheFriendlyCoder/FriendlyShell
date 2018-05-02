@@ -16,19 +16,8 @@ class BaseShell(object):
     """Common base class for all Friendly Shells
 
     Defines basic IO and interactive shell logic common to all Friendly Shells
-
-    :param parent:
-        Optional parent shell which owns this shell. If none provided this
-        shell is assumed to be a parent or first level shell session with
-        no ancestry
     """
     def __init__(self, *args, **kwargs):
-        # First we pop our parent argument off the call stack so it doesn't
-        # propagate to the `object` base class. This needs to be done BEFORE
-        # delegating to `super` to initialize the other classes in our
-        # class hierarchy
-        self._parent = kwargs.pop("parent") if "parent" in kwargs else None
-
         super(BaseShell, self).__init__(*args, **kwargs)
 
         # characters preceding the cursor when prompting for command entry
@@ -45,15 +34,12 @@ class BaseShell(object):
         # Command parser API for parsing tokens from command lines
         self._parser = default_line_parser()
 
+        # input redirection to use instead of the default stdin
         self._input_stream = None
 
-    @property
-    def input_stream(self):
-        """Gets the input source where commands are parsed for this shell
-
-        May return None if no input stream attached to this shell
-        """
-        return self._input_stream
+        # parent Friendly Shell this shell runs under
+        # only used for nested sub-shells
+        self._parent = None
 
     @property
     def _config_folder(self):
@@ -76,8 +62,8 @@ class BaseShell(object):
         :rtype: :class:`str`
         """
         try:
-            if self.input_stream:
-                line = self.input_stream.readline()
+            if self._input_stream:
+                line = self._input_stream.readline()
                 if not line:
                     raise EOFError()
                 self.info(self.prompt + line)
@@ -176,6 +162,12 @@ class BaseShell(object):
             # the line below
             self.info("")
 
+    def run_subshell(self, subshell):
+        """Launches a child process for another shell under this one
+
+        :param subshell: the new Friendly Shell to be launched"""
+        subshell.run(input_stream=self._input_stream, parent=self)
+
     def run(self, *_args, **kwargs):
         """Main entry point function that launches our command line interpreter
 
@@ -188,9 +180,14 @@ class BaseShell(object):
             from. Typically this will be a file-like object containing commands
             to be run, but any input stream object should work.
             If not provided, input will be read from stdin using :meth:`input`
+        :param parent:
+            Optional parent shell which owns this shell. If none provided this
+            shell is assumed to be a parent or first level shell session with
+            no ancestry
         """
         self._input_stream = \
             kwargs.pop("input_stream") if "input_stream" in kwargs else None
+        self._parent = kwargs.pop("parent") if "parent" in kwargs else None
 
         if self.banner_text:
             self.info(self.banner_text)
