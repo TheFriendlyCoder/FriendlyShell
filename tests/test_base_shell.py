@@ -273,6 +273,30 @@ def test_command_with_params():
         assert obj.test_function_ran
 
 
+def test_command_alias():
+    alias_cmd = "myalias"
+    expected_param = "FuBar"
+
+    class test_class(BasicLoggerMixin, BaseShell):
+        test_function_ran = False
+        alias_function_ran = False
+        def do_something(self, my_param):
+            assert my_param == expected_param
+            self.test_function_ran = True
+
+        def alias_something(self):
+            self.alias_function_ran = True
+            return alias_cmd
+
+    obj = test_class()
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.side_effect = [alias_cmd + " " + expected_param, 'exit']
+        obj.run()
+        assert MockInput.call_count == 2
+        assert obj.test_function_ran
+        assert obj.alias_function_ran
+
+
 def test_command_with_too_many_tokens():
     expected_param = "FuBar was here"
 
