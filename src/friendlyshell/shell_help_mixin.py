@@ -138,3 +138,11 @@ class ShellHelpMixin(object):
             "example: " + self.prompt + "help exit"
             ]
         return '\n'.join(retval)
+
+    @staticmethod
+    def alias_help():
+        """Gets short hand character for the help command
+
+        :rtype: :class:`str`
+        """
+        return "?"
