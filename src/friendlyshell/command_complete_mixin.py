@@ -222,45 +222,55 @@ class CommandCompleteMixin(object):  # pragma: no cover
             the one given
         :rtype: :class:`list`
         """
-        self.debug("get_completion_matches...")
+        try:
+            self.debug("get_completion_matches...")
 
-        # Get the full input line as it appears on the prompt
-        original_line = readline.get_line_buffer()
+            # Get the full input line as it appears on the prompt
+            original_line = readline.get_line_buffer()
 
-        # If the start of our current token is the start of the line, we can
-        # assume the user wants us to complete the name of one of the Friendly
-        # Shell's commands (since all commands begin with a command name)
-        # Therefore, we simply return a list of command names that partially
-        # match the current token
-        if readline.get_begidx() == 0:
-            self.debug("Token start is at index 0 - completing command...")
-            return self._complete_command_names(token)
+            # If the start of our current token is the start of the line, we can
+            # assume the user wants us to complete the name of one of the
+            # Friendly Shell's commands (since all commands begin with a
+            # command name). Therefore, we simply return a list of command names
+            # that partially match the current token
+            if readline.get_begidx() == 0:
+                self.debug("Token start is at index 0 - completing command...")
+                return self._complete_command_names(token)
 
-        # Once here, we know we've at least got a command name and the user
-        # now wishes to auto-complete one of the parameters to that command. So
-        # we next parse our partially entered command to get more contextual
-        # information
-        parser = self._parse_line(original_line)
+            # Once here, we know we've at least got a command name and the user
+            # now wishes to auto-complete one of the parameters to that command.
+            # So we next parse our partially entered command to get more
+            # contextual information
+            parser = self._parse_line(original_line)
 
-        self.debug("Parsed completion line: %s", parser)
-        tmp_method = self._get_completion_callback(parser.command)
-        if not tmp_method:
-            self.debug("No completion callback method found")
+            self.debug("Parsed completion line: %s", parser)
+            tmp_method = self._get_completion_callback(parser.command)
+            if not tmp_method:
+                self.debug("No completion callback method found")
+                return None
+            self.debug(
+                "Found completion callback method: %s", tmp_method.__name__)
+
+            # Figure out which of our parsed command tokens is the one to be
+            # auto-completed
+            param_index = \
+                self._get_callback_param_index(parser, original_line, token)
+            if param_index is None:
+                self.debug("Token could not be detected in parameter list")
+                return None
+            self.debug(
+                "Parameter %s contains the completion token", param_index)
+
+            # Call our auto-completion helper method to get a list of possible
+            # matches to the partially entered parameter
+            return self._get_completions(tmp_method, parser, param_index)
+        except Exception:  # pylint: disable=broad-except
+            self.debug("Failed to complete command parameters")
+            self.debug("Details: ", exc_info=True)
             return None
-        self.debug("Found completion callback method: %s", tmp_method.__name__)
-
-        # Figure out which of our parsed command tokens is the one to be
-        # auto-completed
-        param_index = \
-            self._get_callback_param_index(parser, original_line, token)
-        if param_index is None:
-            self.debug("Token could not be detected in parameter list")
+        except KeyboardInterrupt:
+            self.debug("Command completion interrupted by user")
             return None
-        self.debug("Parameter %s contains the completion token", param_index)
-
-        # Call our auto-completion helper method to get a list of possible
-        # matches to the partially entered parameter
-        return self._get_completions(tmp_method, parser, param_index)
 
     def _complete_callback(self, token, index):
         """Autocomplete method called by readline library to retrieve candidates
