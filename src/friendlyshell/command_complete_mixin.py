@@ -197,7 +197,16 @@ class CommandCompleteMixin(object):  # pragma: no cover
         """Gets a list of possible matches for a given command parameter"""
         self.debug(
             '\tCalling into auto completion method %s...', tmp_method.__name__)
-        retval = tmp_method(parser.params, param_index)
+
+        # See if we've been given any parameter tokens yet. If not then ask the
+        # completion callback to return matches for the first param by giving it
+        # an empty list of parsed tokens
+        if hasattr(parser, "params"):
+            params = parser.params
+        else:
+            params = list()
+        retval = tmp_method(params, param_index)
+
         self.debug('Found matches: %s', retval)
 
         # Sanity Check: command completion methods MUST always return a list of
