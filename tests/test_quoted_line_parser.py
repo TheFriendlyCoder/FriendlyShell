@@ -103,15 +103,5 @@ def test_params_with_nested_double_quotes():
     assert res.params[0] == 'param with "double quotes"'
 
 
-def test_invalid_command_parsing():
-    parser = default_line_parser()
-    # Invalid command with an exclamation mark in it
-
-    with pytest.raises(pp.ParseException):
-        res = parser.parseString('Hello_there!')
-        print(res.command)
-        print(res.params)
-
-
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])
