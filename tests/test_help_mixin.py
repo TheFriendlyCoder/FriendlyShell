@@ -65,6 +65,23 @@ def test_default_help(caplog):
         obj.run()
         assert "Here's online help" in caplog.text
 
+
+def test_help_alias(caplog):
+    caplog.set_level(logging.INFO)
+
+    class MyShell(BasicLoggerMixin, BaseShell, ShellHelpMixin):
+        def do_something(self):
+            """Here's online help"""
+            pass
+
+    obj = MyShell()
+
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.side_effect = ['? something', 'exit']
+        obj.run()
+        assert "Here's online help" in caplog.text
+
+
 def test_command_help(caplog):
     caplog.set_level(logging.INFO)
     expected_help = "Here's my verbose help for something..."
