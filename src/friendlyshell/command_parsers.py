@@ -46,7 +46,7 @@ def default_command_token():
     :rtype: :class:`pyparsing.Parser`
     """
 
-    return pp.Word(pp.alphanums + "_").setResultsName('command')
+    return pp.Word(pp.printables).setResultsName('command')
 
 
 def quoted_space_sep_params_token():

@@ -189,19 +189,6 @@ def test_simple_run_close():
         MockInput.assert_called_once()
 
 
-def test_invalid_run(caplog):
-    caplog.set_level(logging.INFO)
-    class MyShell(BasicLoggerMixin, BaseShell):
-        pass
-    obj = MyShell()
-    with patch('friendlyshell.base_shell.input') as MockInput:
-        # Return 2 different commands to execute - the first invalid, and the second to terminate the shell
-        MockInput.side_effect = ['exit!', 'exit']
-        obj.run()
-        assert MockInput.call_count == 2
-        assert 'Parsing error:' in caplog.text
-
-
 def test_keyboard_interrupt():
     class MyShell(BasicLoggerMixin, BaseShell):
         pass
@@ -379,7 +366,7 @@ def test_shell_command(caplog):
     else:
         test_cmd = "ls -a"
 
-    in_stream = StringIO("""!{0}
+    in_stream = StringIO("""! {0}
         exit""".format(test_cmd))
 
     obj.run(input_stream=in_stream)
@@ -397,7 +384,7 @@ def test_shell_command_not_found(caplog):
 
     obj = test_class()
     expected_command = "fubarasdf1234"
-    in_stream = StringIO("""!{0}
+    in_stream = StringIO("""! {0}
         something
         exit""".format(expected_command))
 

@@ -146,7 +146,7 @@ class BaseShell(object):
             # the line below
             self.info("")
 
-    def _run_shell_command(self, cmd):
+    def do_native_shell(self, cmd):
         """Executes a shell command within the Friendly Shell environment
 
         :param str cmd: Shell command to execute
@@ -157,7 +157,7 @@ class BaseShell(object):
                 cmd,
                 shell=True,
                 stderr=subprocess.STDOUT)
-            self.info(output)
+            self.info(output.decode("utf-8"))
         except subprocess.CalledProcessError as err:
             self.info("Failed to run command %s: %s", err.cmd, err.returncode)
             self.info(err.output)
@@ -168,6 +168,14 @@ class BaseShell(object):
             # write out a blank to ensure the interactive prompt appears on
             # the line below
             self.info("")
+
+    @staticmethod
+    def alias_native_shell():
+        """Gets the shorthand character for the 'native_shell' command
+
+        :rtype: :class:`str`
+        """
+        return "!"
 
     def run_subshell(self, subshell):
         """Launches a child process for another shell under this one
@@ -207,10 +215,6 @@ class BaseShell(object):
             # Before we process our command input, see if we need to
             # substitute any environment variables that may be used
             line = os.path.expandvars(line)
-
-            if line[0] == "!":
-                self._run_shell_command(line[1:])
-                continue
 
             parser = self._parse_line(line)
             if parser is None:
@@ -339,20 +343,32 @@ class BaseShell(object):
                   Returns None if no command method found
         :rtype: :class:`meth`
         """
+        self.debug("looking for command method...")
+
+        # Gather all class methods, including static methods
         all_methods = inspect.getmembers(self, inspect.ismethod)
+        all_methods.extend(inspect.getmembers(self, inspect.isfunction))
+
+        # See if we can find a 'do_' method for our command...
         for cur_method in all_methods:
+            self.debug("Processing %s", cur_method)
             if cur_method[0] == 'do_' + command_name:
+                self.debug("command method found: %s", cur_method[0])
                 return cur_method[1]
 
         # if no command method can be found for the specified token,
         # try looking up an alias for the command as well:
+        self.debug("Looking for alias...")
         for cur_method in all_methods:
             if not cur_method[0].startswith("alias_"):
                 continue
+            self.debug("Found alias method %s", cur_method[0])
             if cur_method[1]() == command_name:
                 orig_cmd_name = cur_method[0][len("alias_"):]
+                self.debug("Recursing to find alias command %s", orig_cmd_name)
                 return self._find_command(orig_cmd_name)
 
+        self.debug("No command found with name " + command_name)
         return None
 
     def do_exit(self):
