@@ -21,7 +21,6 @@ def test_list_commands(caplog):
         assert 'exit' in caplog.text
         assert 'help' in caplog.text
         assert 'something' in caplog.text
-        assert '!' in caplog.text
         assert obj.do_something.__doc__ in caplog.text
 
 
