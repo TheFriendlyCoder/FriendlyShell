@@ -343,6 +343,16 @@ class BaseShell(object):
         for cur_method in all_methods:
             if cur_method[0] == 'do_' + command_name:
                 return cur_method[1]
+
+        # if no command method can be found for the specified token,
+        # try looking up an alias for the command as well:
+        for cur_method in all_methods:
+            if not cur_method[0].startswith("alias_"):
+                continue
+            if cur_method[1]() == command_name:
+                orig_cmd_name = cur_method[0][len("alias_"):]
+                return self._find_command(orig_cmd_name)
+
         return None
 
     def do_exit(self):
