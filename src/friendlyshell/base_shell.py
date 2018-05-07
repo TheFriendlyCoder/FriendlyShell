@@ -106,24 +106,31 @@ class BaseShell(object):
         :param parser: The parsed command parameters to pass to the command
         """
         try:
-            num_params = len(parser.params) if parser.params else 0
-            required_params = self._count_required_params(func)
-            all_params = self._count_params(func)
-            if not required_params <= num_params <= all_params:
-                msg = 'Command %s requires %s of %s parameters but ' \
-                      '%s were provided.'
-                self.error(
-                    msg,
-                    func.__name__.replace("do_", ""),
-                    required_params,
-                    all_params,
-                    num_params)
+            if not parser.params:
+                func()
                 return
 
-            if parser.params:
-                func(*parser.params)
-            else:
-                func()
+            params_to_pass = parser.params
+            num_params_total = self._count_params(func)
+            if len(params_to_pass) > num_params_total:
+                # If we have more tokens than parameters on the command function
+                # we concatenate the extraneous tokens with the last parameter
+                # assuming the command function is going to parse the tokens
+                # itself or otherwise perform it's logic on the unparsed
+                # input
+
+                self.debug("too many tokens - concatenating extras")
+
+                num_params_to_compress = \
+                    len(params_to_pass) - num_params_total + 1
+                self.debug("params to compress %s", num_params_to_compress)
+                compressed = " ".join(params_to_pass[-num_params_to_compress:])
+                self.debug("compressed params: %s", compressed)
+
+                params_to_pass = params_to_pass[:-num_params_to_compress]
+                params_to_pass.append(compressed)
+
+            func(*params_to_pass)
         except Exception as err:  # pylint: disable=broad-except
             # Log summary info about the error to standard error output
             self.error('Unknown error detected: %s', err)
@@ -214,7 +221,43 @@ class BaseShell(object):
                 self.error("Command not found: %s", parser.command)
                 continue
 
+            if not self._check_params(func, parser):
+                continue
+
             self._execute_command(func, parser)
+
+    def _check_params(self, func, parser):
+        """Are there sufficient tokens to populate command parameters
+
+        :param func: command function to be called
+        :param parser: parsed tokens rom the shell
+        :returns:
+            true if there are sufficient parameters to call the command, false
+            if not
+        :rtype: :class:`bool`
+        """
+        num_tokens = len(parser.params) if parser.params else 0
+        num_required_params = self._count_required_params(func)
+        total_num_params = self._count_params(func)
+
+        if total_num_params == 0 and num_tokens != 0:
+            msg = "Command %s accepts no parameters but %s provided."
+            self.error(
+                msg,
+                func.__name__.replace("do_", ""),
+                num_tokens
+            )
+            return False
+
+        if num_tokens < num_required_params:
+            msg = 'Command %s requires %s parameters but %s provided.'
+            self.error(
+                msg,
+                func.__name__.replace("do_", ""),
+                num_required_params,
+                num_tokens)
+            return False
+        return True
 
     def _count_required_params(self, cmd_method):
         """Gets the number of required parameters from a command method

@@ -273,18 +273,43 @@ def test_command_with_params():
         assert obj.test_function_ran
 
 
-def test_command_too_many_params():
-    expected_params = "Fu Bar"
+def test_command_with_too_many_tokens():
+    expected_param = "FuBar was here"
 
     class test_class(BasicLoggerMixin, BaseShell):
+        test_function_ran = False
         def do_something(self, my_param):
-            pytest.fail("Test method should not be invoked")
+            assert my_param == expected_param
+            self.test_function_ran = True
 
     obj = test_class()
     with patch('friendlyshell.base_shell.input') as MockInput:
-        MockInput.side_effect = ['something ' + expected_params, 'exit']
+        MockInput.side_effect = ['something ' + expected_param, 'exit']
         obj.run()
         assert MockInput.call_count == 2
+        assert obj.test_function_ran
+
+
+def test_command_with_more_tokens_than_params():
+    expected_param1 = "FirstParam"
+    expected_param2 = "FuBar was here"
+
+    class test_class(BasicLoggerMixin, BaseShell):
+        test_function_ran = False
+        def do_something(self, my_param1, my_param2):
+            assert my_param1 == expected_param1
+            assert my_param2 == expected_param2
+            self.test_function_ran = True
+
+    obj = test_class()
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.side_effect = [
+            'something ' + expected_param1 + " " + expected_param2,
+            'exit'
+        ]
+        obj.run()
+        assert MockInput.call_count == 2
+        assert obj.test_function_ran
 
 
 def test_command_missing_params(caplog):
@@ -299,7 +324,7 @@ def test_command_missing_params(caplog):
         MockInput.side_effect = ['something first', 'exit']
         obj.run()
         assert MockInput.call_count == 2
-        msg = "Command something requires 2 of 2 parameters but 1 were provided"
+        msg = "Command something requires 2 parameters but 1 provided"
         assert msg in caplog.text
 
 
@@ -315,7 +340,7 @@ def test_command_no_params(caplog):
         MockInput.side_effect = ['something', 'exit']
         obj.run()
         assert MockInput.call_count == 2
-        msg = "Command something requires 2 of 2 parameters but 0 were provided"
+        msg = "Command something requires 2 parameters but 0 provided"
         assert msg in caplog.text
 
 
