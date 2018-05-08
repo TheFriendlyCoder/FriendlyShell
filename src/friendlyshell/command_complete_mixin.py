@@ -159,6 +159,10 @@ class CommandCompleteMixin(object):
         """Calculates which command parameter is being completed."""
         self.debug("get_callback_param_index")
         param_index = None
+        if readline.get_endidx() == len(original_line) and \
+                original_line[-1] == " ":
+            return len(parser.params)
+
         for i in range(len(parser.params)):
             offset = original_line.find(parser.params[i], len(parser.command))
             self.debug(
@@ -176,10 +180,6 @@ class CommandCompleteMixin(object):
                 break
 
         # Sanity checks...
-        if param_index is None:
-            self.debug('Unable to match param %s to index', token)
-            return None
-
         if not parser.params[param_index].startswith(token):
             self.debug(
                 'Messed up token matching %s != %s',
@@ -201,10 +201,12 @@ class CommandCompleteMixin(object):
         # See if we've been given any parameter tokens yet. If not then ask the
         # completion callback to return matches for the first param by giving it
         # an empty list of parsed tokens
-        if hasattr(parser, "params"):
-            params = parser.params
-        else:
-            params = list()
+        params = parser.params or list()
+        if param_index >= len(params):
+            params.append("")
+        if len(params) <= param_index:
+            self.debug("Parameter index is outside the relevant range")
+            return list()
         retval = tmp_method(params, param_index)
 
         self.debug('Found matches: %s', retval)
