@@ -1,12 +1,41 @@
 """Mixin class that adds online help to a friendly shell"""
 import inspect
+from textwrap import wrap
 import tabulate
 
 
 class ShellHelpMixin(object):
     """Mixin class to be added to any friendly shell to add online help"""
+    # Number of characters the online help output should be wrapped to
+    WRAP_WIDTH = 80
+
     def __init__(self, *args, **kwargs):  # pylint: disable=useless-super-delegation
         super(ShellHelpMixin, self).__init__(*args, **kwargs)
+
+    def _description_wrap(self, command_names, help_examples):
+        """Calculates the maximum width for descriptive text in our help output
+
+        :param list command_names: list of command names to render
+        :param list help_examples: list of extended help examples to render
+        :return:
+            number of characters remaining for rendering descriptive text
+            may be 0 if there is no available room for rendering descriptions
+        :rtype: :class:`int`
+        """
+        longest_cmd = 0
+        for cur_cmd in command_names:
+            if len(cur_cmd) > longest_cmd:
+                longest_cmd = len(cur_cmd)
+
+        longest_extended_help = 0
+        for cur_help in help_examples:
+            if len(cur_help) > longest_extended_help:
+                longest_extended_help = len(cur_help)
+
+        other_fields_width = longest_cmd + longest_extended_help + 2
+        if other_fields_width > self.WRAP_WIDTH:
+            return 0
+        return self.WRAP_WIDTH - other_fields_width
 
     def _list_commands(self):
         """Displays a list of supported commands"""
@@ -34,7 +63,8 @@ class ShellHelpMixin(object):
                 # Generate our help data
                 command_list['Command'].append(cmd_name)
                 doc_string = inspect.getdoc(method_obj) or ''
-                command_list['Description'].append(doc_string.split('\n')[0])
+                doc_string = doc_string.replace("\n", " ")
+                command_list['Description'].append(doc_string)
 
                 if hasattr(self, method_name.replace('do_', 'help_')):
                     self.debug(
@@ -47,20 +77,28 @@ class ShellHelpMixin(object):
                     # can be called to display verbose help. We can add
                     # verification logic for this elsewhere when necessary
                     command_list['Extended Help'].append(
-                        '`' + self.prompt + 'help ' + cmd_name + '`')
+                        '`help ' + cmd_name + '`')
                 else:
                     command_list['Extended Help'].append('N/A')
 
-        self.info("COMMANDS")
+        wrap_width = self._description_wrap(
+            command_list['Command'],
+            command_list['Extended Help'])
+
+        if wrap_width == 0:
+            self.error("Insufficient space to render help. Consider enlarging "\
+                       "the width of your help output.")
+            return
+
+        new_desc = list()
+        for cur_cmd in command_list['Description']:
+            new_desc.append("\n".join(wrap(cur_cmd, wrap_width)))
+        command_list['Description'] = new_desc
+
         self.info(tabulate.tabulate(command_list, headers="keys"))
 
     def do_help(self, arg=None):
-        """Online help generation (this command)
-
-        :param str arg:
-            Optional command to generate online help for.
-            If not defined, show a list of commands
-        """
+        """Online help generation (this command)"""
         # no command given, show available commands
         if arg is None:
             self.debug("Showing default help output...")
@@ -74,37 +112,43 @@ class ShellHelpMixin(object):
             self.error("Command does not exist: %s", arg)
             return
         cmd_method = getattr(self, cmd_method_name)
-        if not inspect.ismethod(cmd_method):
+        if not inspect.ismethod(cmd_method) and \
+            not inspect.isfunction(cmd_method):
             self.error(
                 'Error: definition "%s" in derived class must be a method. '
                 'Check implementation',
                 cmd_method_name)
             return
 
+        # Next, extract summary information from the doc strings associated
+        # with the command method
+        docs = ""
+        tmp_docs = cmd_method.__doc__ or ""
+        for cur_line in tmp_docs.split("\n"):
+            if not cur_line.strip():
+                continue
+            docs += cur_line.strip() + " "
+
         # Next, see if there's a "help_<cmd>" method on the class
         method_name = 'help_' + arg
         if hasattr(self, method_name):
             func = getattr(self, method_name)
-            if not inspect.ismethod(func):
+            if not inspect.ismethod(func) and not inspect.isfunction(func):
                 self.error(
                     'Error: definition "%s" in derived class must be a method. '
                     'Check implementation',
                     method_name)
                 return
 
-            self.info(func())
+            docs += "\n\n" + func()
+
+        if not docs:
+            self.info('No online help for command "%s"', arg)
             return
 
-        # If no explicit help method, parse the help from the doc string for
-        # the command method
-        docs = cmd_method.__doc__
-        if docs:
-            self.info(docs.split('\n')[0])
-            return
+        for cur_line in docs.split("\n"):
+            self.info("\n".join(wrap(cur_line, self.WRAP_WIDTH)))
 
-        # If we get here then there's no online help defined for the command
-        # anywhere in the class hierarchy
-        self.info('No online help for command "%s"', arg)
 
     def complete_help(self, parser, parameter_index):
         """Automatic completion method for the 'help' command"""
