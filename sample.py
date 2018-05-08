@@ -17,7 +17,7 @@ class MyShell (BasicShell):
         super(MyShell, self).__init__(*args, **kwargs)
         self.banner_text = "My Sample Shell v1.0"
 
-    def complete_parent_op(self, parser, index):
+    def complete_parent_op(self, params, index):
         # print("In completer...")
         self.debug(str(params))
         self.debug(str(index))

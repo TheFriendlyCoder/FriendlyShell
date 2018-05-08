@@ -114,7 +114,7 @@ def auto_complete_manager(key, callback, history_file=None):  # pragma: no cover
 
 
 # pylint: disable=too-few-public-methods
-class CommandCompleteMixin(object):  # pragma: no cover
+class CommandCompleteMixin(object):
     """Mixin to be added to any friendly shell to add command completion"""
 
     def __init__(self, *args, **kwargs):
@@ -160,6 +160,7 @@ class CommandCompleteMixin(object):  # pragma: no cover
         self.debug("get_callback_param_index")
         param_index = None
         for i in range(len(parser.params)):
+            offset = original_line.find(parser.params[i], len(parser.command))
             self.debug(
                 "\tSeeing if token %s is the one to match", parser.params[i])
             self.debug("\t\tMatching offset is %s", readline.get_begidx())
@@ -168,9 +169,8 @@ class CommandCompleteMixin(object):  # pragma: no cover
                 "\t\tOffset of %s in %s is %s",
                 parser.params[i],
                 original_line,
-                original_line.find(parser.params[i], len(parser.command)))
-            if original_line.find(parser.params[i], len(parser.command)) == \
-                    readline.get_begidx():
+                offset)
+            if offset == readline.get_begidx():
                 self.debug("\tFound match at parameter %s", i)
                 param_index = i
                 break
@@ -335,10 +335,6 @@ class CommandCompleteMixin(object):  # pragma: no cover
             #       this index would be: len(line) + 1
             self.debug('\t\tEnding index "%s"', readline.get_endidx())
             # ------------------------------------------------------------------
-            if readline.get_line_buffer()[0] == "!":
-                self.debug(
-                    "Processing subcommand '%s'. Skipping command expansion.",
-                    line)
             if index != 0:
                 if index >= len(self._latest_matches):
                     self.debug('Completed auto completion routine.')
@@ -381,7 +377,7 @@ class CommandCompleteMixin(object):  # pragma: no cover
 
     def do_clear_history(self):
         """Clears the history of previously used commands from this shell"""
-        if not AUTOCOMPLETE_ENABLED:
+        if not AUTOCOMPLETE_ENABLED:  # pragma: no cover
             self.info("Command completion disabled.")
             return
 
