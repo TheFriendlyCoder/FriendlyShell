@@ -147,10 +147,7 @@ class BaseShell(object):
             self.info("")
 
     def do_native_shell(self, cmd):
-        """Executes a shell command within the Friendly Shell environment
-
-        :param str cmd: Shell command to execute
-        """
+        """Executes a shell command within the Friendly Shell environment"""
         self.debug("Running shell command %s", cmd)
         try:
             output = subprocess.check_output(
@@ -381,11 +378,7 @@ class BaseShell(object):
             self._parent.do_exit()
 
     def do_close(self):
-        """Terminates the currently running shell
-
-        If the current shell is a sub-shell spawned by another Friendly Shell
-        instance, control will return to the parent shell which will continue
-        running"""
+        """Terminates the currently running shell"""
         self.debug(
             'Closing shell %s (%s)',
             self.__class__.__name__,
@@ -395,6 +388,12 @@ class BaseShell(object):
         # whichever comes next in the shell's ancestry
         self._done = True
 
+    @staticmethod
+    def help_close():
+        """Extended help for close method"""
+        return """If the current shell is a sub-shell spawned by another """\
+               """Friendly Shell instance, control will return to the """\
+               """parent shell which will continue running"""
 
 if __name__ == "__main__":
     pass
