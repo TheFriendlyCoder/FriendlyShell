@@ -62,6 +62,12 @@ class ShellHelpMixin(object):
 
                 # Generate our help data
                 command_list['Command'].append(cmd_name)
+                alias_method_name = "alias_" + cmd_name
+                if hasattr(self, alias_method_name):
+                    alias_method = getattr(self, alias_method_name)
+                    command_list['Command'][-1] += \
+                        " ({0})".format(alias_method())
+
                 doc_string = inspect.getdoc(method_obj) or ''
                 doc_string = doc_string.replace("\n", " ")
                 command_list['Description'].append(doc_string)
@@ -80,6 +86,7 @@ class ShellHelpMixin(object):
                         '`help ' + cmd_name + '`')
                 else:
                     command_list['Extended Help'].append('N/A')
+
 
         wrap_width = self._description_wrap(
             command_list['Command'],
