@@ -1,4 +1,5 @@
 """Common shell interaction logic shared between different shells"""
+from __future__ import print_function
 import os
 import sys
 import inspect
@@ -394,6 +395,59 @@ class BaseShell(object):
         return """If the current shell is a sub-shell spawned by another """\
                """Friendly Shell instance, control will return to the """\
                """parent shell which will continue running"""
+
+    @staticmethod
+    def info(message, *args, **_kwargs):
+        """Displays an info message to the default output stream
+
+        Default implementation just directs output to stdout. Use a logging
+        mixin class to customize this behavior.
+
+        See :class:`friendlyshell.basic_logger_mixin.BasicLoggerMixin` for
+        examples.
+
+        :param str message: text to be displayed"""
+        print(message % args)
+
+    @staticmethod
+    def warning(message, *args, **_kwargs):
+        """Displays a non-critical warning message to the default output stream
+
+        Default implementation just directs output to stdout. Use a logging
+        mixin class to customize this behavior.
+
+        See :class:`friendlyshell.basic_logger_mixin.BasicLoggerMixin` for
+        examples.
+
+         :param str message: text to be displayed"""
+        print(message % args)
+
+    @staticmethod
+    def error(message, *args, **_kwargs):
+        """Displays a critical error message to the default output stream
+
+        Default implementation just directs output to stdout. Use a logging
+        mixin class to customize this behavior.
+
+        See :class:`friendlyshell.basic_logger_mixin.BasicLoggerMixin` for
+        examples.
+
+        :param str message: text to be displayed"""
+        print(message % args)
+
+    @staticmethod
+    def debug(message, *args, **_kwargs):
+        """Displays an internal-use-only debug message to verbose log file
+
+        Default implementation hides all debug output. Use a logging mixin
+        class to customize this behavior.
+
+        See :class:`friendlyshell.basic_logger_mixin.BasicLoggerMixin` for
+        examples.
+
+        :param str message: text to be displayed"""
+        pass
+
 
 if __name__ == "__main__":
     pass
