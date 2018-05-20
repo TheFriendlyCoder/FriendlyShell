@@ -3,7 +3,6 @@ import logging
 import sys
 import os
 from friendlyshell.base_shell import BaseShell
-from friendlyshell.basic_logger_mixin import BasicLoggerMixin
 from mock import patch
 import pytest
 from io import StringIO
@@ -11,7 +10,7 @@ import subprocess
 
 
 def test_defaults():
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         pass
     obj = MyShell()
 
@@ -19,7 +18,7 @@ def test_defaults():
 
 
 def test_basic_parseline():
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         pass
     obj = MyShell()
     exp_command = "MyCommand"
@@ -35,7 +34,7 @@ def test_basic_parseline():
 
 
 def test_find_exit_command():
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         pass
     obj = MyShell()
 
@@ -47,7 +46,7 @@ def test_find_exit_command():
 
 
 def test_find_missing_command():
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         pass
     obj = MyShell()
 
@@ -58,7 +57,7 @@ def test_find_missing_command():
 
 @pytest.mark.timeout(5)
 def test_simple_run_exit():
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         pass
     obj = MyShell()
     with patch('friendlyshell.base_shell.input') as MockInput:
@@ -68,9 +67,9 @@ def test_simple_run_exit():
 
 
 @pytest.mark.timeout(5)
-def test_simple_run_input_stream(caplog):
+def test_simple_run_input_stream(capsys):
     expected_message = "My output from my command"
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         def do_my_cmd(self):
             self.info(expected_message)
 
@@ -79,13 +78,13 @@ def test_simple_run_input_stream(caplog):
     exit""")
 
     obj.run(input_stream=in_stream)
-    assert expected_message in caplog.text
+    assert expected_message in capsys.readouterr().out
 
 @pytest.mark.timeout(5)
-def test_run_input_stream_no_exit(caplog):
+def test_run_input_stream_no_exit(capsys):
     expected_message = "My output from my command"
 
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         def do_my_cmd(self):
             self.info(expected_message)
 
@@ -93,19 +92,19 @@ def test_run_input_stream_no_exit(caplog):
     in_stream = StringIO("""my_cmd""")
 
     obj.run(input_stream=in_stream)
-    assert expected_message in caplog.text
+    assert expected_message in capsys.readouterr().out
 
 
 @pytest.mark.timeout(5)
-def test_run_input_stream_nested_exit(caplog):
+def test_run_input_stream_nested_exit(capsys):
     expected_message1 = "My output from my command"
     expected_message2 = "My Subcommand Output"
 
-    class SubShell(BasicLoggerMixin, BaseShell):
+    class SubShell(BaseShell):
         def do_my_sub_op(self):
             self.info(expected_message2)
 
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         def do_my_cmd(self):
             self.info(expected_message1)
 
@@ -120,21 +119,22 @@ def test_run_input_stream_nested_exit(caplog):
     exit""")
 
     obj.run(input_stream=in_stream)
-    assert expected_message1 in caplog.text
-    assert expected_message2 in caplog.text
+    output = capsys.readouterr()
+    assert expected_message1 in output.out
+    assert expected_message2 in output.out
 
 
 @pytest.mark.timeout(5)
-def test_run_input_stream_subshell_close(caplog):
+def test_run_input_stream_subshell_close(capsys):
     expected_message1 = "My output from my command"
     expected_message2 = "My Subcommand Output"
     expected_message3 = "Here's the other parents output"
 
-    class SubShell(BasicLoggerMixin, BaseShell):
+    class SubShell(BaseShell):
         def do_my_sub_op(self):
             self.info(expected_message2)
 
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         def do_my_cmd(self):
             self.info(expected_message1)
 
@@ -154,17 +154,18 @@ def test_run_input_stream_subshell_close(caplog):
     exit""")
 
     obj.run(input_stream=in_stream)
-    assert expected_message1 in caplog.text
-    assert expected_message2 in caplog.text
-    assert expected_message3 in caplog.text
+    output = capsys.readouterr().out
+    assert expected_message1 in output
+    assert expected_message2 in output
+    assert expected_message3 in output
 
 @pytest.mark.timeout(5)
 def test_simple_nested_exit():
     expected_text = "Ran method successfully"
-    class SubShell(BasicLoggerMixin, BaseShell):
+    class SubShell(BaseShell):
         def do_subop(self):
             self.info(expected_text)
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         def do_mysubshell (self):
             temp = SubShell()
             self.run_subshell(temp)
@@ -180,7 +181,7 @@ def test_simple_nested_exit():
 
 
 def test_simple_run_close():
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         pass
     obj = MyShell()
     with patch('friendlyshell.base_shell.input') as MockInput:
@@ -190,7 +191,7 @@ def test_simple_run_close():
 
 
 def test_keyboard_interrupt():
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         pass
     obj = MyShell()
     with patch('friendlyshell.base_shell.input') as MockInput:
@@ -199,9 +200,8 @@ def test_keyboard_interrupt():
         MockInput.assert_called_once()
 
 
-def test_unhandled_exception(caplog):
-    caplog.set_level(logging.INFO)
-    class MyShell(BasicLoggerMixin, BaseShell):
+def test_unhandled_exception(capsys):
+    class MyShell(BaseShell):
         pass
     obj = MyShell()
     with patch('friendlyshell.base_shell.input') as MockInput:
@@ -210,28 +210,27 @@ def test_unhandled_exception(caplog):
         obj.run()
         MockInput.assert_called_once()
         msg = 'Unexpected error during input sequence: ' + expected_error
-        assert msg in caplog.text
+        assert msg in capsys.readouterr().out
 
 
-def test_missing_command(caplog):
-    caplog.set_level(logging.INFO)
+def test_missing_command(capsys):
     expected_error = "Command not found"
     expected_command_name = "fubar"
-    class test_class(BasicLoggerMixin, BaseShell):
+    class test_class(BaseShell):
         pass
     obj = test_class()
     with patch('friendlyshell.base_shell.input') as MockInput:
         MockInput.side_effect = [expected_command_name, 'exit']
         obj.run()
         assert MockInput.call_count == 2
-        assert expected_error in caplog.text
-        assert expected_command_name in caplog.text
+        output = capsys.readouterr().out
+        assert expected_error in output
+        assert expected_command_name in output
 
-def test_command_exception(caplog):
-    caplog.set_level(logging.INFO)
+def test_command_exception(capsys):
     expected_error = "Some weird thing just happened"
 
-    class test_class(BasicLoggerMixin, BaseShell):
+    class test_class(BaseShell):
         def do_something(self):
             raise Exception(expected_error)
 
@@ -240,13 +239,13 @@ def test_command_exception(caplog):
         MockInput.side_effect = ['something', 'exit']
         obj.run()
         assert MockInput.call_count == 2
-        assert expected_error in caplog.text
+        assert expected_error in capsys.readouterr().out
 
 
 def test_command_with_params():
     expected_param = "FuBar"
 
-    class test_class(BasicLoggerMixin, BaseShell):
+    class test_class(BaseShell):
         test_function_ran = False
         def do_something(self, my_param):
             assert my_param == expected_param
@@ -264,7 +263,7 @@ def test_command_alias():
     alias_cmd = "myalias"
     expected_param = "FuBar"
 
-    class test_class(BasicLoggerMixin, BaseShell):
+    class test_class(BaseShell):
         test_function_ran = False
         alias_function_ran = False
         def do_something(self, my_param):
@@ -287,7 +286,7 @@ def test_command_alias():
 def test_command_with_too_many_tokens():
     expected_param = "FuBar was here"
 
-    class test_class(BasicLoggerMixin, BaseShell):
+    class test_class(BaseShell):
         test_function_ran = False
         def do_something(self, my_param):
             assert my_param == expected_param
@@ -305,7 +304,7 @@ def test_command_with_more_tokens_than_params():
     expected_param1 = "FirstParam"
     expected_param2 = "FuBar was here"
 
-    class test_class(BasicLoggerMixin, BaseShell):
+    class test_class(BaseShell):
         test_function_ran = False
         def do_something(self, my_param1, my_param2):
             assert my_param1 == expected_param1
@@ -323,9 +322,8 @@ def test_command_with_more_tokens_than_params():
         assert obj.test_function_ran
 
 
-def test_command_missing_params(caplog):
-    caplog.set_level(logging.INFO)
-    class test_class(BasicLoggerMixin, BaseShell):
+def test_command_missing_params(capsys):
+    class test_class(BaseShell):
         def do_something(self, my_param1, my_param2):
             pytest.fail("Test method should not be invoked")
 
@@ -336,12 +334,11 @@ def test_command_missing_params(caplog):
         obj.run()
         assert MockInput.call_count == 2
         msg = "Command something requires 2 parameters but 1 provided"
-        assert msg in caplog.text
+        assert msg in capsys.readouterr().out
 
 
-def test_command_no_params(caplog):
-    caplog.set_level(logging.INFO)
-    class test_class(BasicLoggerMixin, BaseShell):
+def test_command_no_params(capsys):
+    class test_class(BaseShell):
         def do_something(self, my_param1, my_param2):
             pytest.fail("Test method should not be invoked")
 
@@ -352,12 +349,11 @@ def test_command_no_params(caplog):
         obj.run()
         assert MockInput.call_count == 2
         msg = "Command something requires 2 parameters but 0 provided"
-        assert msg in caplog.text
+        assert msg in capsys.readouterr().out
 
 
-def test_shell_command(caplog):
-    caplog.set_level(logging.INFO)
-    class test_class(BasicLoggerMixin, BaseShell):
+def test_shell_command(capsys):
+    class test_class(BaseShell):
         pass
 
     obj = test_class()
@@ -371,14 +367,14 @@ def test_shell_command(caplog):
 
     obj.run(input_stream=in_stream)
 
+    output = capsys.readouterr().out
     for cur_item in os.listdir("."):
-        assert cur_item in caplog.text
+        assert cur_item in output
 
 
-def test_shell_command_not_found(caplog):
-    caplog.set_level(logging.INFO)
+def test_shell_command_not_found(capsys):
     expected_text = "Hello World"
-    class test_class(BasicLoggerMixin, BaseShell):
+    class test_class(BaseShell):
         def do_something(self):
             self.info(expected_text)
 
@@ -391,17 +387,17 @@ def test_shell_command_not_found(caplog):
     obj.run(input_stream=in_stream)
 
     # Make sure the second command in the sequence rance
-    assert expected_text in caplog.text
+    output = capsys.readouterr().out
+    assert expected_text in output
     if sys.platform.startswith("win"):
-        assert "not recognized" in caplog.text
-    assert expected_command in caplog.text
+        assert "not recognized" in output
+    assert expected_command in output
 
 
 @pytest.mark.timeout(5)
-def test_banner_text(caplog):
-    caplog.set_level(logging.INFO)
+def test_banner_text(capsys):
     expected_banner_text = "Here's my awesome banner!"
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         def __init__(self, *args, **kwargs):
             super(MyShell, self).__init__(*args, **kwargs)
             self.banner_text = expected_banner_text
@@ -411,14 +407,13 @@ def test_banner_text(caplog):
         MockInput.return_value = 'exit'
         obj.run()
         MockInput.assert_called_once()
-        assert expected_banner_text in caplog.text
+        assert expected_banner_text in capsys.readouterr().out
 
 
 @pytest.mark.timeout(5)
-def test_keyboard_interrupt_command(caplog):
-    caplog.set_level(logging.INFO)
+def test_keyboard_interrupt_command(capsys):
     expected_text = "Here's my awesome banner!"
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         def do_op1(self):
             raise KeyboardInterrupt()
         def do_op2(self):
@@ -434,13 +429,12 @@ def test_keyboard_interrupt_command(caplog):
             ]
         obj.run()
         assert MockInput.call_count == 3
-        assert expected_text in caplog.text
+        assert expected_text in capsys.readouterr().out
 
 
 @pytest.mark.timeout(5)
-def test_keyboard_interrupt_input(caplog):
-    caplog.set_level(logging.INFO)
-    class MyShell(BasicLoggerMixin, BaseShell):
+def test_keyboard_interrupt_input():
+    class MyShell(BaseShell):
         pass
 
     obj = MyShell()
@@ -452,9 +446,8 @@ def test_keyboard_interrupt_input(caplog):
 
 
 @pytest.mark.timeout(5)
-def test_keyboard_interrupt_shell(caplog):
-    caplog.set_level(logging.INFO)
-    class MyShell(BasicLoggerMixin, BaseShell):
+def test_keyboard_interrupt_shell(capsys):
+    class MyShell(BaseShell):
         pass
 
     obj = MyShell()
@@ -470,12 +463,11 @@ def test_keyboard_interrupt_shell(caplog):
                 ]
             obj.run()
             assert MockInput.call_count == 2
-            assert unexpected_text not in caplog.text
+            assert unexpected_text not in capsys.readouterr().out
 
-def test_env_var_expansion(caplog):
-    caplog.set_level(logging.INFO)
+def test_env_var_expansion(capsys):
     expected_text = "Performing test command..."
-    class MyShell(BasicLoggerMixin, BaseShell):
+    class MyShell(BaseShell):
         def do_somecmd(self):
             self.info(expected_text)
     obj = MyShell()
@@ -491,7 +483,7 @@ def test_env_var_expansion(caplog):
         finally:
             del(os.environ["FSHELL_TEST"])
         assert MockInput.call_count == 2
-        assert expected_text in caplog.text
+        assert expected_text in capsys.readouterr().out
 
 
 if __name__ == "__main__":
