@@ -19,6 +19,7 @@ class BaseShell(object):
     Defines basic IO and interactive shell logic common to all Friendly Shells
     """
     def __init__(self, *args, **kwargs):
+
         super(BaseShell, self).__init__(*args, **kwargs)
 
         # characters preceding the cursor when prompting for command entry
@@ -27,6 +28,11 @@ class BaseShell(object):
         # text to be displayed upon launch of the shell, before displaying
         # the interactive prompt
         self.banner_text = None
+
+        # flag to abort the interactive interpreter the first time an action
+        # method returns a non-zero error code. Helpful when running an FShell
+        # instance in batch-mode with actions loaded from a source file.
+        self.stop_on_error = False
 
         # Flag indicating whether this shell should be closed after the current
         # command finishes processing
@@ -45,6 +51,9 @@ class BaseShell(object):
         # default comment delimiter
         self.comment_delimiter = "#"
 
+
+        # flag that detects when an action method returns an error code
+        self._action_failed = False
 
     @property
     def _config_folder(self):
@@ -112,7 +121,9 @@ class BaseShell(object):
         """
         try:
             if not parser.params:
-                func()
+                rcode = func()
+                if rcode:
+                    self._action_failed = True
                 return
 
             params_to_pass = parser.params
@@ -135,7 +146,9 @@ class BaseShell(object):
                 params_to_pass = params_to_pass[:-num_params_to_compress]
                 params_to_pass.append(compressed)
 
-            func(*params_to_pass)
+            rcode = func(*params_to_pass)
+            if rcode:
+                self._action_failed = True
         except Exception as err:  # pylint: disable=broad-except
             # Log summary info about the error to standard error output
             self.error('Unknown error detected: %s', err)
@@ -183,7 +196,9 @@ class BaseShell(object):
         """Launches a child process for another shell under this one
 
         :param subshell: the new Friendly Shell to be launched"""
-        subshell.run(input_stream=self._input_stream, parent=self)
+        rcode = subshell.run(input_stream=self._input_stream, parent=self)
+        if rcode:
+            self._action_failed = True
 
     def run(self, *_args, **kwargs):
         """Main entry point function that launches our command line interpreter
@@ -201,6 +216,10 @@ class BaseShell(object):
             Optional parent shell which owns this shell. If none provided this
             shell is assumed to be a parent or first level shell session with
             no ancestry
+        :returns:
+            True if the command interpreter ran all commands successfully,
+            False if one or more commands returned a non-zero error code
+        :rtype: :class:`bool`
         """
         self._input_stream = \
             kwargs.pop("input_stream") if "input_stream" in kwargs else None
@@ -235,6 +254,8 @@ class BaseShell(object):
                 continue
 
             self._execute_command(func, parser)
+            if self.stop_on_error and self._action_failed:
+                self.do_exit()
 
     def _check_params(self, func, parser):
         """Are there sufficient tokens to populate command parameters
