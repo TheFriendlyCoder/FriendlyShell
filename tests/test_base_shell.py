@@ -108,9 +108,12 @@ def test_run_input_stream_no_exit(capsys):
     obj = MyShell()
     in_stream = StringIO("""my_cmd""")
 
-    obj.run(input_stream=in_stream)
-    assert expected_message in capsys.readouterr().out
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        MockInput.return_value = 'exit'
+        obj.run(input_stream=in_stream)
+        MockInput.assert_called_once()
 
+        assert expected_message in capsys.readouterr().out
 
 @pytest.mark.timeout(5)
 def test_run_input_stream_nested_exit(capsys):
