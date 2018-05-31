@@ -42,6 +42,10 @@ class BaseShell(object):
         # only used for nested sub-shells
         self._parent = None
 
+        # default comment delimiter
+        self.comment_delimiter = "#"
+
+
     @property
     def _config_folder(self):
         """Gets the folder where config and log files should be stored
@@ -208,6 +212,10 @@ class BaseShell(object):
         while not self._done:
             line = self._get_input()
             if not line:
+                continue
+
+            if line.startswith(self.comment_delimiter):
+                self.debug("Skipping comment line %s", line)
                 continue
 
             # Before we process our command input, see if we need to

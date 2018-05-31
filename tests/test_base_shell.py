@@ -81,6 +81,23 @@ def test_simple_run_input_stream(capsys):
     assert expected_message in capsys.readouterr().out
 
 @pytest.mark.timeout(5)
+def test_simple_run_comment(capsys):
+    expected_message = "My output from my command"
+    class MyShell(BaseShell):
+        command_ran = False
+        def do_my_cmd(self):
+            MyShell.command_ran = True
+            self.info(expected_message)
+
+    obj = MyShell()
+    in_stream = StringIO("""#my_cmd
+    exit""")
+
+    obj.run(input_stream=in_stream)
+    assert MyShell.command_ran is False
+    assert expected_message not in capsys.readouterr().out
+
+@pytest.mark.timeout(5)
 def test_run_input_stream_no_exit(capsys):
     expected_message = "My output from my command"
 
