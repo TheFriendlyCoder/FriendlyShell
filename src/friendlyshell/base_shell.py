@@ -70,8 +70,9 @@ class BaseShell(object):
             if self._input_stream:
                 line = self._input_stream.readline()
                 if not line:
-                    raise EOFError()
-                self.info(self.prompt + line)
+                    self._input_stream = None
+                else:
+                    self.info(self.prompt + line)
             else:
                 line = input(self.prompt)
             return line
@@ -82,14 +83,6 @@ class BaseShell(object):
             # user can attempt to recover from whatever operation they
             # tried to abort
             self._done = True
-            return None
-        except EOFError:
-            # When reading from an input stream, see if we've reached the
-            # end of the stream. If so, assume we are meant to terminate
-            # the shell and return control back to the caller. This avoids
-            # having to force the user to always end their non-interactive
-            # scripts with an 'exit' command at the end
-            self.do_exit()
             return None
         except Exception as err:  # pylint: disable=broad-except
             self.error(
