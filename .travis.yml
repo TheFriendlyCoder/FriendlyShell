@@ -1,21 +1,45 @@
 language: python
-sudo: false
-
-# Make sure we run all 'test' stages before we deply
-# and ensure we only deploy from production branches / tags
-stages:
-  - test
-  - name: deploy
-    if: tag IS present
 
 # Generate a matrix for all Python versions we support
-python:
-  - 2.7
-  - 3.4
-  - 3.5
-  - 3.6
-  - pypy
-  - pypy3
+matrix:
+  include:
+    - name: "Python pypy 2 tests"
+      python: pypy
+      env: TOXENV=pypy
+    - name: "Python pypy 3 tests"
+      python: pypy3
+      env: TOXENV=pypy3
+    - name: "Python 2.7 tests"
+      python: 2.7
+      env: TOXENV=py27
+    - name: "Python 3.4 tests"
+      python: 3.4
+      env: TOXENV=py34
+    - name: "Python 3.5 tests"
+      python: 3.5
+      env: TOXENV=py35
+    - name: "Python 3.6 tests"
+      python: 3.6
+      env: TOXENV=py36
+    - name: "Python 3.7 tests"
+      python: 3.7
+      env: TOXENV=py37
+      # NOTE: Python 3.7 is currently not natively supported by Travis-CI so we
+      #       have to hack around it here using Ubuntu 16.04
+      dist: xenial
+      sudo: true
+    - name: "Deploy to PYPI"
+      # Only enable deploys when building from tags
+      if: tag IS present
+      # As a general convention we just package and deploy from Python 3.6
+      # The version really shouldn't matter since our wheel file is version
+      # agnostic
+      python: 3.6
+      env: TOXENV=py36
+      stage: deploy
+      script:
+        - python setup.py bdist_wheel
+        - twine upload dist/*.whl -u $DEPLOY_USER -p $DEPLOY_PASS
 
 # Install all of our build-time dependencies
 install: pip install wheel twine tox coveralls
@@ -24,22 +48,7 @@ install: pip install wheel twine tox coveralls
 # one copy of this default job will be generated for each python
 # version stated above
 script:
-  - source ./travisenv.sh
   - tox
-
-# Default a secondary, custom job that only runs after the default 'test'
-# job completes successfully
-# NOTE: Deploy stages will only run on tags or off the master branch as
-#       defined in the stage declarations above
-# NOTE: We've restricted this deploy job to only run for Python v3.6
-#       since we're generating a version-agnostic package
-jobs:
-  include:
-    - stage: deploy
-      python: 3.6
-      script:
-        - python setup.py bdist_wheel
-        - twine upload dist/*.whl -u $DEPLOY_USER -p $DEPLOY_PASS
 
 after_success:
  - coveralls

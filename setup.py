@@ -68,6 +68,16 @@ setup(
         'tabulate',
         'pyreadline; platform_system == "Windows"'
     ],
+    extras_require={
+        'dev': [
+            'pytest',
+            'pytest-cov',
+            'pytest-timeout',
+            'mock',
+            'pylint',
+            'sphinx',
+            'tox'],
+    },
     keywords='cmd command line shell interactive interpreter',
     license="GPL",
     classifiers=[
