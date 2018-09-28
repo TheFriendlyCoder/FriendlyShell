@@ -2,11 +2,11 @@ language: python
 
 # Make sure we run all 'test' stages before we deply
 # and ensure we only deploy from production branches / tags
-stages:
-  - name: test
+#stages:
+#  - name: test
 #  - name: deploy
 #    if: tag IS present
-  - name: deploy
+#  - name: deploy
 
 # Generate a matrix for all Python versions we support
 matrix:
