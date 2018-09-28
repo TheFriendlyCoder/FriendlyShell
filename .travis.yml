@@ -2,10 +2,10 @@ language: python
 
 # Make sure we run all 'test' stages before we deply
 # and ensure we only deploy from production branches / tags
-stages:
-  - test
-  - name: deploy
-    if: tag IS present
+#stages:
+#  - test
+#  - name: deploy
+#    if: tag IS present
 
 # Generate a matrix for all Python versions we support
 matrix:
@@ -50,13 +50,13 @@ script:
 # NOTE: We've restricted this deploy job to only run for the latest Python
 #       version. Since we are generating a version-agnostic package this
 #       should 'just work' on all other supported versions.
-jobs:
-  include:
-    - stage: deploy
-      python: 3.6
-      script:
-        - python setup.py bdist_wheel
-        - twine upload dist/*.whl -u $DEPLOY_USER -p $DEPLOY_PASS
-
-after_success:
- - coveralls
+#jobs:
+#  include:
+#    - stage: deploy
+#      python: 3.6
+#      script:
+#        - python setup.py bdist_wheel
+#        - twine upload dist/*.whl -u $DEPLOY_USER -p $DEPLOY_PASS
+#
+#after_success:
+# - coveralls
