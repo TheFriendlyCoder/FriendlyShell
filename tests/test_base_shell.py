@@ -67,6 +67,33 @@ def test_simple_run_exit():
 
 
 @pytest.mark.timeout(5)
+def test_simple_run_line_with_spaces(capsys):
+    expected_message = "My output from my command"
+
+    class MyShell(BaseShell):
+        command_ran = False
+
+        def do_my_cmd(self):
+            MyShell.command_ran = True
+            self.info(expected_message)
+
+    obj = MyShell()
+    with patch('friendlyshell.base_shell.input') as MockInput:
+
+        MockInput.side_effect = [
+            ' ',        # This should be interpreted as a blank line and ignored
+            'my_cmd',   # This should execute our custom command
+            'exit']
+        obj.run()
+        assert MockInput.call_count == 3
+
+    output = capsys.readouterr().out
+    # Make sure our shell command was executed
+    assert expected_message in output
+    # make sure we didn't get any parsing errors
+    assert "parsing error" not in output.lower()
+
+@pytest.mark.timeout(5)
 def test_simple_run_input_stream(capsys):
     expected_message = "My output from my command"
     class MyShell(BaseShell):
@@ -96,6 +123,16 @@ def test_simple_run_comment(capsys):
     obj.run(input_stream=in_stream)
     assert MyShell.command_ran is False
     assert expected_message not in capsys.readouterr().out
+
+@pytest.mark.timeout(5)
+def test_simple_run_blank_line(capsys):
+
+    obj = BaseShell()
+    in_stream = StringIO("""
+    exit""")
+
+    obj.run(input_stream=in_stream)
+    assert "parsing error" not in capsys.readouterr().out.lower()
 
 @pytest.mark.timeout(5)
 def test_run_input_stream_no_exit(capsys):
