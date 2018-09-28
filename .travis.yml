@@ -46,6 +46,7 @@ matrix:
       stage: deploy
       script:
         - python setup.py bdist_wheel
+        - twine upload dist/*.whl -u $DEPLOY_USER -p $DEPLOY_PASS
 
 
 # Install all of our build-time dependencies
