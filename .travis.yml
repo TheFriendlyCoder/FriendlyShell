@@ -37,6 +37,7 @@ matrix:
       dist: xenial
       sudo: true
     - name: "Deploy to PYPI"
+      if: tag IS present
       # As a general convention we just package and deploy from Python 3.6
       # The version really shouldn't matter since our wheel file is version
       # agnostic
@@ -55,21 +56,6 @@ install: pip install wheel twine tox coveralls
 # version stated above
 script:
   - tox
-
-# Default a secondary, custom job that only runs after the default 'test'
-# job completes successfully
-# NOTE: Deploy stages will only run on tags or off the master branch as
-#       defined in the stage declarations above
-# NOTE: We've restricted this deploy job to only run for the latest Python
-#       version. Since we are generating a version-agnostic package this
-#       should 'just work' on all other supported versions.
-#jobs:
-#  include:
-#    - stage: deploy
-#      python: 3.7
-#      script:
-#        - python setup.py bdist_wheel
-#        - twine upload dist/*.whl -u $DEPLOY_USER -p $DEPLOY_PASS
 
 after_success:
  - coveralls
