@@ -7,7 +7,7 @@ stages:
 #  - name: deploy
 #    if: tag IS present
   - name: deploy
-    if: env('TOXENV') == 'py37'
+    if: env('TOXENV') == 'py36'
 
 # Generate a matrix for all Python versions we support
 matrix:
