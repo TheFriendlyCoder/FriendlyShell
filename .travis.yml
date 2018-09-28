@@ -11,6 +11,12 @@ stages:
 # Generate a matrix for all Python versions we support
 matrix:
   include:
+    - name: "Python pypy 2 tests"
+      python: pypy
+      env: TOXENV=pypy
+    - name: "Python pypy 3 tests"
+      python: pypy3
+      env: TOXENV=pypy3
     - name: "Python 2.7 tests"
       python: 2.7
       env: TOXENV=py27
@@ -32,12 +38,6 @@ matrix:
       sudo: true
       stage: deploy
       script: python setup.py bdist_wheel
-    - name: "Python pypy 2 tests"
-      python: pypy
-      env: TOXENV=pypy
-    - name: "Python pypy 3 tests"
-      python: pypy3
-      env: TOXENV=pypy3
 
 
 # Install all of our build-time dependencies
