@@ -1,13 +1,5 @@
 language: python
 
-# Make sure we run all 'test' stages before we deply
-# and ensure we only deploy from production branches / tags
-#stages:
-#  - name: test
-#  - name: deploy
-#    if: tag IS present
-#  - name: deploy
-
 # Generate a matrix for all Python versions we support
 matrix:
   include:
@@ -37,6 +29,7 @@ matrix:
       dist: xenial
       sudo: true
     - name: "Deploy to PYPI"
+      # Only enable deploys when building from tags
       if: tag IS present
       # As a general convention we just package and deploy from Python 3.6
       # The version really shouldn't matter since our wheel file is version
@@ -47,7 +40,6 @@ matrix:
       script:
         - python setup.py bdist_wheel
         - twine upload dist/*.whl -u $DEPLOY_USER -p $DEPLOY_PASS
-
 
 # Install all of our build-time dependencies
 install: pip install wheel twine tox coveralls
