@@ -1,6 +1,7 @@
 """Mixin for displaying output from a friendly shell"""
 import logging
 import os
+import sys
 
 
 class BasicLoggerMixin(object):
@@ -37,7 +38,7 @@ class BasicLoggerMixin(object):
         global_logger.setLevel(logging.DEBUG)
 
         # All info messages and above are going to the console
-        console_handler = logging.StreamHandler()
+        console_handler = logging.StreamHandler(sys.stdout)
         console_format = logging.Formatter(fmt="%(message)s")
         console_handler.setLevel(logging.INFO)
         console_handler.setFormatter(console_format)
