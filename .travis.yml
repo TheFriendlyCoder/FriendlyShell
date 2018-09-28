@@ -3,9 +3,10 @@ language: python
 # Make sure we run all 'test' stages before we deply
 # and ensure we only deploy from production branches / tags
 stages:
-  - test
+  - name: test
+#  - name: deploy
+#    if: tag IS present
   - name: deploy
-    if: tag IS present
 
 # Generate a matrix for all Python versions we support
 matrix:
@@ -29,6 +30,8 @@ matrix:
       #       have to hack around it here using Ubuntu 16.04
       dist: xenial
       sudo: true
+      stage: deploy
+      script: python setup.py bdist_wheel
     - name: "Python pypy 2 tests"
       python: pypy
       env: TOXENV=pypy
