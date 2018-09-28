@@ -72,9 +72,12 @@ class BaseShell(object):
                 if not line:
                     self._input_stream = None
                 else:
+                    line = line.strip()
                     self.info(self.prompt + line)
             else:
                 line = input(self.prompt)
+                if line:
+                    line = line.strip()
             return line
         except KeyboardInterrupt:
             # When the user enters CTRL+C to terminate the shell, we just
