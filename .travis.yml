@@ -14,6 +14,7 @@ python:
   - 3.4
   - 3.5
   - 3.6
+  - 3.7
   - pypy
   - pypy3
 
@@ -31,12 +32,13 @@ script:
 # job completes successfully
 # NOTE: Deploy stages will only run on tags or off the master branch as
 #       defined in the stage declarations above
-# NOTE: We've restricted this deploy job to only run for Python v3.6
-#       since we're generating a version-agnostic package
+# NOTE: We've restricted this deploy job to only run for the latest Python
+#       version. Since we are generating a version-agnostic package this
+#       should 'just work' on all other supported versions.
 jobs:
   include:
     - stage: deploy
-      python: 3.6
+      python: 3.7
       script:
         - python setup.py bdist_wheel
         - twine upload dist/*.whl -u $DEPLOY_USER -p $DEPLOY_PASS
