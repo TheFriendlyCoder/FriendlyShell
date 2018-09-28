@@ -53,13 +53,13 @@ script:
 # NOTE: We've restricted this deploy job to only run for the latest Python
 #       version. Since we are generating a version-agnostic package this
 #       should 'just work' on all other supported versions.
-jobs:
-  include:
-    - stage: deploy
-      python: 3.7
-      script:
-        - python setup.py bdist_wheel
-        - twine upload dist/*.whl -u $DEPLOY_USER -p $DEPLOY_PASS
+#jobs:
+#  include:
+#    - stage: deploy
+#      python: 3.7
+#      script:
+#        - python setup.py bdist_wheel
+#        - twine upload dist/*.whl -u $DEPLOY_USER -p $DEPLOY_PASS
 
 after_success:
  - coveralls
