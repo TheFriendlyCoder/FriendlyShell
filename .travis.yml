@@ -7,6 +7,7 @@ stages:
 #  - name: deploy
 #    if: tag IS present
   - name: deploy
+    if: env('TOXENV') == 'py37'
 
 # Generate a matrix for all Python versions we support
 matrix:
@@ -36,8 +37,15 @@ matrix:
       #       have to hack around it here using Ubuntu 16.04
       dist: xenial
       sudo: true
+    - name: "Deploy to PYPI"
+      # As a general convention we just package and deploy from Python 3.6
+      # The version really shouldn't matter since our wheel file is version
+      # agnostic
+      python: 3.6
+      env: TOXENV=py36
       stage: deploy
-      script: python setup.py bdist_wheel
+      script:
+        - python setup.py bdist_wheel
 
 
 # Install all of our build-time dependencies
