@@ -22,9 +22,9 @@ matrix:
     - name: "Python 3.6 tests"
       python: 3.6
       env: TOXENV=py36
-#    - name: "Python 3.7 tests"
-#      python: 3.7
-#      env: TOXENV=py37
+    - name: "Python 3.7 tests"
+      python: 3.7
+      env: TOXENV=py37
     - name: "Python pypy 2 tests"
       python: pypy
       env: TOXENV=pypy
