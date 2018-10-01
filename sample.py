@@ -44,7 +44,7 @@ class MyShell (BasicShell):
 if __name__ == "__main__":
     obj = MyShell()
 
-    obj.run()
-    exit()
+    # obj.run()
+    # exit()
     with open("test.fsh", "r") as fh:
         obj.run(input_stream=fh)
