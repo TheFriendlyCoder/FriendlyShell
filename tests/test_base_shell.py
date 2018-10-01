@@ -1,12 +1,12 @@
 from __future__ import unicode_literals
-import logging
 import sys
 import os
 from friendlyshell.base_shell import BaseShell
-from mock import patch
+from mock import patch, MagicMock
 import pytest
 from io import StringIO
 import subprocess
+import pyparsing as pp
 
 
 def test_defaults():
@@ -31,6 +31,30 @@ def test_basic_parseline():
     assert len(res.params) == 2
     assert res.params[0] == exp_param1
     assert res.params[1] == exp_param2
+
+
+def test_parse_error_input_stream_error_code(capsys):
+    command_message = "Should not see this..."
+    mock_parser = MagicMock()
+    mock_parser.parseString.side_effect = pp.ParseException("")
+    class test_class(BaseShell):
+        def __init__(self, *args, **kwargs):
+            super(test_class, self).__init__(*args, **kwargs)
+            self._parser = mock_parser
+        def do_my_cmd (self):
+            self.info(command_message)
+
+    obj = test_class()
+
+    in_stream = StringIO("""my_cmd
+    exit""")
+
+    obj.run(input_stream=in_stream)
+    assert obj.return_code != 0
+    mock_parser.parseString.assert_called_once()
+    output = capsys.readouterr()
+    assert "parsing error" in output.out.lower()
+    assert command_message not in output.out
 
 
 def test_find_exit_command():
@@ -94,6 +118,33 @@ def test_simple_run_line_with_spaces(capsys):
     assert "parsing error" not in output.lower()
 
 @pytest.mark.timeout(5)
+def test_simple_run_line_with_spaces(capsys):
+    expected_message = "My output from my command"
+
+    class MyShell(BaseShell):
+        command_ran = False
+
+        def do_my_cmd(self):
+            MyShell.command_ran = True
+            self.info(expected_message)
+
+    obj = MyShell()
+    with patch('friendlyshell.base_shell.input') as MockInput:
+
+        MockInput.side_effect = [
+            ' ',        # This should be interpreted as a blank line and ignored
+            'my_cmd',   # This should execute our custom command
+            'exit']
+        obj.run()
+        assert MockInput.call_count == 3
+
+    output = capsys.readouterr().out
+    # Make sure our shell command was executed
+    assert expected_message in output
+    # make sure we didn't get any parsing errors
+    assert "parsing error" not in output.lower()
+
+@pytest.mark.timeout(5)
 def test_simple_run_input_stream(capsys):
     expected_message = "My output from my command"
     class MyShell(BaseShell):
@@ -106,6 +157,47 @@ def test_simple_run_input_stream(capsys):
 
     obj.run(input_stream=in_stream)
     assert expected_message in capsys.readouterr().out
+    assert obj.return_code == 0
+
+
+@pytest.mark.timeout(5)
+def test_simple_run_input_stream_error_code(capsys):
+    expected_message = "My output from my command"
+    command_not_executed_message = "Should not see me"
+    class MyShell(BaseShell):
+        def do_my_cmd1(self):
+            raise Exception(expected_message)
+        def do_my_cmd2(self):
+            self.info(command_not_executed_message)
+
+    obj = MyShell()
+    in_stream = StringIO("""my_cmd1
+    my_cmd2
+    exit""")
+
+    obj.run(input_stream=in_stream)
+    output = capsys.readouterr()
+    assert obj.return_code != 0
+    assert expected_message in output.out
+    assert command_not_executed_message not in output.out
+
+
+@pytest.mark.timeout(5)
+def test_simple_run_input_stream_error_code_missing_command(capsys):
+    command_not_executed_message = "Should not see me"
+    class MyShell(BaseShell):
+        def do_my_cmd(self):
+            self.info(command_not_executed_message)
+
+    obj = MyShell()
+    in_stream = StringIO("""my_missing_command
+    my_cmd
+    exit""")
+
+    obj.run(input_stream=in_stream)
+    output = capsys.readouterr()
+    assert obj.return_code != 0
+    assert command_not_executed_message not in output.out
 
 @pytest.mark.timeout(5)
 def test_simple_run_comment(capsys):
@@ -217,7 +309,7 @@ def test_run_input_stream_subshell_close(capsys):
     assert expected_message3 in output
 
 @pytest.mark.timeout(5)
-def test_simple_nested_exit():
+def test_simple_nested_exit(capsys):
     expected_text = "Ran method successfully"
     class SubShell(BaseShell):
         def do_subop(self):
@@ -268,7 +360,7 @@ def test_unhandled_exception(capsys):
         MockInput.assert_called_once()
         msg = 'Unexpected error during input sequence: ' + expected_error
         assert msg in capsys.readouterr().out
-
+        assert obj.return_code != 0
 
 def test_missing_command(capsys):
     expected_error = "Command not found"
@@ -297,6 +389,7 @@ def test_command_exception(capsys):
         obj.run()
         assert MockInput.call_count == 2
         assert expected_error in capsys.readouterr().out
+        assert obj.return_code != 0
 
 
 def test_command_with_params():
@@ -392,6 +485,7 @@ def test_command_missing_params(capsys):
         assert MockInput.call_count == 2
         msg = "Command something requires 2 parameters but 1 provided"
         assert msg in capsys.readouterr().out
+        assert obj.return_code != 0
 
 
 def test_command_no_params(capsys):
@@ -436,19 +530,19 @@ def test_shell_command_not_found(capsys):
             self.info(expected_text)
 
     obj = test_class()
-    expected_command = "fubarasdf1234"
-    in_stream = StringIO("""! {0}
-        something
-        exit""".format(expected_command))
 
-    obj.run(input_stream=in_stream)
-
-    # Make sure the second command in the sequence rance
-    output = capsys.readouterr().out
-    assert expected_text in output
-    if sys.platform.startswith("win"):
-        assert "not recognized" in output
-    assert expected_command in output
+    with patch('friendlyshell.base_shell.input') as MockInput:
+        expected_command = "fubarasdf1234"
+        MockInput.side_effect = [expected_command, 'something', 'exit']
+        obj.run()
+        assert MockInput.call_count == 3
+        # Make sure the second command in the sequence ran
+        output = capsys.readouterr().out
+        assert expected_text in output
+        if sys.platform.startswith("win"):
+            assert "not recognized" in output
+        assert expected_command in output
+        assert obj.return_code != 0
 
 
 @pytest.mark.timeout(5)

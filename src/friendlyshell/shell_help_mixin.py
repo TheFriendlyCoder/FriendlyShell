@@ -156,7 +156,6 @@ class ShellHelpMixin(object):
         for cur_line in docs.split("\n"):
             self.info("\n".join(wrap(cur_line, self.WRAP_WIDTH)))
 
-
     def complete_help(self, parser, parameter_index):
         """Automatic completion method for the 'help' command"""
         return self._complete_command_names(
