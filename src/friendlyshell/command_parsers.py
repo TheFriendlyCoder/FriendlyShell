@@ -78,11 +78,7 @@ def quoted_space_sep_params_token():
     :rtype: :class:`pyparsing.Parser`"""
 
     # token for a command parameter with no spaces embedded in it
-    # NOTE: Even though 'printables' doesn't have whitespace characters in it
-    #       we need to exclude spaces here for some reason
-    simple_parameter = pp.Word(pp.printables, excludeChars='"\'') + \
-                       pp.Optional(pp.Word(pp.printables, excludeChars=' ')) + \
-                       pp.Optional(pp.Word(pp.printables, excludeChars='"\''))
+    simple_parameter = pp.Word(pp.printables, excludeChars='"\'')
 
     # Complex parameter with embedded spaces delimited by single quote
     # characters. Such params may also contain embedded double quotes
@@ -105,10 +101,9 @@ def quoted_space_sep_params_token():
     # A command line may have multiple parameters separated by spaces. Below
     # is the token encapsulating all params in a command line. These will be
     # parsed into a list of tokens accessible by the 'params' named parameter
-    params = pp.delimitedList(parameter, delim=pp.White(' ')).\
-        setResultsName('params')
+    params = pp.OneOrMore(parameter).setResultsName('params')
 
-    return pp.White().suppress() + params
+    return params
 
 
 if __name__ == "__main__":
