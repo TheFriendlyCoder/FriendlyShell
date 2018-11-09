@@ -82,15 +82,15 @@ def quoted_space_sep_params_token():
 
     # Complex parameter with embedded spaces delimited by single quote
     # characters. Such params may also contain embedded double quotes
-    single_quoted_parameter = pp.Word("'").suppress() + \
+    single_quoted_parameter = pp.Combine(pp.Word("'") + \
                               pp.Word(pp.printables + ' ', excludeChars="'") + \
-                              pp.Word("'").suppress()
+                              pp.Word("'"))
 
     # Complex parameter with embedded spaces delimited by double quote
     # characters. Such params may also contain embedded single quotes
-    double_quoted_parameter = pp.Word('"').suppress() + \
+    double_quoted_parameter = pp.Combine(pp.Word('"') + \
                               pp.Word(pp.printables + ' ', excludeChars='"') + \
-                              pp.Word('"').suppress()
+                              pp.Word('"'))
 
     # Token represent an arbitrary parameter which may be one of the quoted or
     # simple formatter params defined above. NOTE: pyparsing uses ^ as a
