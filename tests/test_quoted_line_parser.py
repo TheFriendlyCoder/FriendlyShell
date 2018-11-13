@@ -135,5 +135,46 @@ def test_mixed_param_quotes():
     assert res.params[2] == "'third param'"
     assert res.params[3] == "fourth_param"
 
+
+def test_partial_completion_double_quotes():
+    parser = default_line_parser()
+    res = parser.parseString("MyCommand first_param \"partial")
+    assert res is not None
+    assert res.command == "MyCommand"
+    assert len(res.params) == 2
+    assert res.params[0] == "first_param"
+    assert res.params[1] == "\"partial"
+
+
+def test_partial_completion_single_quotes():
+    parser = default_line_parser()
+    res = parser.parseString("MyCommand first_param 'partial")
+    assert res is not None
+    assert res.command == "MyCommand"
+    assert len(res.params) == 2
+    assert res.params[0] == "first_param"
+    assert res.params[1] == "'partial"
+
+
+def test_incomplete_double_quotes():
+    parser = default_line_parser()
+    res = parser.parseString("MyCommand first_param \"")
+    assert res is not None
+    assert res.command == "MyCommand"
+    assert len(res.params) == 2
+    assert res.params[0] == "first_param"
+    assert res.params[1] == "\""
+
+
+def test_incomplete_single_quotes():
+    parser = default_line_parser()
+    res = parser.parseString("MyCommand first_param '")
+    assert res is not None
+    assert res.command == "MyCommand"
+    assert len(res.params) == 2
+    assert res.params[0] == "first_param"
+    assert res.params[1] == "'"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])
