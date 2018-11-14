@@ -159,33 +159,49 @@ class CommandCompleteMixin(object):
         """Calculates which command parameter is being completed."""
         self.debug("get_callback_param_index")
         param_index = None
+        begidx = readline.get_begidx()
+        self.debug("Begin index is %s", begidx)
+        contains_quotes = False
+        for cur_token in parser.params:
+            if cur_token.startswith('"') and not cur_token.endswith('"'):
+                self.debug("Contains quotes: %s", cur_token)
+                contains_quotes = True
+                break
+            if cur_token.startswith("'") and not cur_token.endswith("'"):
+                self.debug("Contains quotes: %s", cur_token)
+                contains_quotes = True
+                break
+
         if readline.get_endidx() == len(original_line) and \
-                original_line[-1] == " ":
+                original_line[-1] == " " and not contains_quotes:
             return len(parser.params)
 
         for i in range(len(parser.params)):
             offset = original_line.find(parser.params[i], len(parser.command))
             self.debug(
                 "\tSeeing if token %s is the one to match", parser.params[i])
-            self.debug("\t\tMatching offset is %s", readline.get_begidx())
+            self.debug("\t\tMatching offset is %s", begidx)
             self.debug("\t\tMatching token is %s", token)
             self.debug(
                 "\t\tOffset of %s in %s is %s",
                 parser.params[i],
                 original_line,
                 offset)
-            if offset == readline.get_begidx():
+
+            # See if our token begins within this parsed token
+            # The parsed token may be different from the readline starting
+            # offset if the command line parser conforms to different parsing
+            # rules than the readline library (ie: like when parsing command
+            # lines that have quoted parameters with nested spaces in them)
+            if offset <= begidx <= offset + len(parser.params[i]):
                 self.debug("\tFound match at parameter %s", i)
                 param_index = i
                 break
 
-        # Sanity checks...
-        if not parser.params[param_index].startswith(token):
-            self.debug(
-                'Messed up token matching %s != %s',
-                token,
-                parser.params[param_index])
-            return None
+        # Sanity check
+        # By the time we get here we should have deduced the token location
+        # within the input line
+        assert param_index is not None
 
         self.debug(
             "Parameter being completed is %s: %s",
@@ -193,20 +209,80 @@ class CommandCompleteMixin(object):
             parser.params[param_index])
         return param_index
 
-    def _get_completions(self, tmp_method, parser, param_index):
-        """Gets a list of possible matches for a given command parameter"""
-        self.debug(
-            '\tCalling into auto completion method %s...', tmp_method.__name__)
+    def _preprocess_quoted_params(self, tokens, params, param_index):
+        """Preprocess completion tokens to make them compatible with readline
 
-        # See if we've been given any parameter tokens yet. If not then ask the
-        # completion callback to return matches for the first param by giving it
-        # an empty list of parsed tokens
-        params = parser.params or list()
+        The readline library has a specific set of token processing rules
+        which is quite rigid. In particular, it's handling of white space
+        is quite limited with no real support for escaping space characters
+        or processing tokens that are delimited by quotation marks.
+
+        To help work around this limitation without placing undue complexity
+        on classes that derive from this base class, we allow command completion
+        methods to return potential matches using whatever scheme or parsing
+        logic they desire. Then here we look at the list of potential token
+        matches and reformat them so they work correctly with readline.
+
+        Specifically, when a token is quoted and has nested spaces within it,
+        we need to figure out where the starting character is within each token
+        that readline is trying to expand (ie: which sub-string within the
+        token represents the part that readline cares about) and return only
+        those sub-strings that are relevant for it.
+
+        Example:
+            Source Token: "My New V
+            Potential matches: ["My New Violin", "My New Vehicle", "My New Van"]
+            readline compatible version: [Violin", Vehicle", Van"]
+
+        :param list tokens:
+            list of completion tokens that match the partially completed input
+        :param list params:
+            list of pre-parsed command parameters loaded from readline
+        :param int param_index:
+            numeric index within the params list indicating which parameter
+            is being auto-completed by readline
+        :returns:
+            input 'tokens' reformatted to be compatible with readline
+        :rtype: :class:`list` of :class:`str`
+        """
+        self.debug("preprocessing completion results...")
+
+        # Find the offset within the parameter value where the readline
+        # token is located, and truncate all of the match results removing
+        # all characters prior to the readline start index from the return
+        # values
+        original_line = readline.get_line_buffer()
+
+        line_offset = original_line.rfind(params[param_index])
+        self.debug("Offset where parameter %s starts: %s",
+                   params[param_index],
+                   line_offset)
+
+        token_offset = readline.get_begidx() - line_offset
+        self.debug("Offset within token is: %s", token_offset)
+
+        retval = list()
+        for cur_item in tokens:
+            proc_token = cur_item[token_offset:]
+            self.debug("Processing %s: %s", cur_item, proc_token)
+            retval.append(proc_token)
+        return retval
+
+    def _get_completions(self, tmp_method, params, param_index):
+        """Gets a list of possible matches for a given command parameter"""
+        # See if we've been given any parameter tokens yet. If not then ask
+        # the completion callback to return matches for the first param by
+        # giving it an empty list of parsed tokens
+        params = params or list()
         if param_index >= len(params):
             params.append("")
         if len(params) <= param_index:
             self.debug("Parameter index is outside the relevant range")
-            return list()
+            return None
+
+        self.debug(
+            '\tCalling into auto completion method %s...', tmp_method.__name__)
+
         retval = tmp_method(params, param_index)
 
         self.debug('Found matches: %s', retval)
@@ -222,7 +298,10 @@ class CommandCompleteMixin(object):
             self.debug('\tActual returned data was %s', retval)
             return None
 
-        return retval
+        # pre-process data returned to readline so it is compliant with
+        # it's token processing rules
+        return self._preprocess_quoted_params(
+            retval, params, param_index)
 
     def _get_completion_matches(self, token):
         """get a list of potential matches for a incomplete token
@@ -274,7 +353,8 @@ class CommandCompleteMixin(object):
 
             # Call our auto-completion helper method to get a list of possible
             # matches to the partially entered parameter
-            return self._get_completions(tmp_method, parser, param_index)
+            return self._get_completions(tmp_method, parser.params, param_index)
+
         except Exception:  # pylint: disable=broad-except
             self.debug("Failed to complete command parameters")
             self.debug("Details: ", exc_info=True)
