@@ -233,6 +233,37 @@ def test_complete_last_parameter(mock_readline):
 
 
 @patch("friendlyshell.command_complete_mixin.readline")
+def test_complete_repeated_parameter(mock_readline):
+    expected_matches = ["FuBar2"]
+
+    class MyShell(BaseShell, CommandCompleteMixin, BasicLoggerMixin):
+        completion_called = False
+        def do_something(self):
+            pass
+
+        def complete_something(self, params, index):
+            MyShell.completion_called = True
+            assert len(params) == 2
+            assert index == 1
+            assert params[0] == "FuBar1"
+            assert params[1] == "FuBar"
+
+            return expected_matches
+
+    input_line = "something FuBar1 FuBar"
+    mock_readline.get_line_buffer.return_value = input_line
+    mock_readline.get_begidx.return_value = len("something FuBar1 ")
+    mock_readline.get_endidx.return_value = len(input_line)
+
+    obj = MyShell()
+
+    matches = obj._complete_callback("", 0)
+    assert MyShell.completion_called
+    assert matches == expected_matches[0]
+
+
+
+@patch("friendlyshell.command_complete_mixin.readline")
 def test_complete_single_quote(mock_readline):
     matches = ["'My Van'"]
 

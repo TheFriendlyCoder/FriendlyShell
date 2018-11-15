@@ -176,8 +176,9 @@ class CommandCompleteMixin(object):
                 original_line[-1] == " " and not contains_quotes:
             return len(parser.params)
 
+        partial_line = parser.command
         for i in range(len(parser.params)):
-            offset = original_line.find(parser.params[i], len(parser.command))
+            offset = original_line.find(parser.params[i], len(partial_line))
             self.debug(
                 "\tSeeing if token %s is the one to match", parser.params[i])
             self.debug("\t\tMatching offset is %s", begidx)
@@ -197,6 +198,8 @@ class CommandCompleteMixin(object):
                 self.debug("\tFound match at parameter %s", i)
                 param_index = i
                 break
+
+            partial_line = original_line[:offset + len(parser.params[i])]
 
         # Sanity check
         # By the time we get here we should have deduced the token location
