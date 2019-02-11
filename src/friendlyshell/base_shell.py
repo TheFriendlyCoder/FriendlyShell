@@ -486,7 +486,7 @@ class BaseShell(object):
         examples.
 
         :param str message: text to be displayed"""
-        pass
+
 
 
 if __name__ == "__main__":
