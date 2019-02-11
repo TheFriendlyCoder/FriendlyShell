@@ -1,7 +1,11 @@
 """Package initialization..."""
-from pkg_resources import get_distribution, DistributionNotFound
+import logging
+import os
+import ast
 
-try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:  # pragma: no cover
-    __version__ = "0.0.0.dev0"
+_CUR_FILE = os.path.realpath(__file__)
+_CUR_PATH = os.path.split(_CUR_FILE)[0]
+_PROPS = open(os.path.join(_CUR_PATH, 'version.prop')).read()
+__version__ = ast.literal_eval(_PROPS)
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())

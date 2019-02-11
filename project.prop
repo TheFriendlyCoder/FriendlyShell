@@ -1,0 +1,28 @@
+# This file contains a single dictionary definition containing all of the
+# project-specific customization options supported by this template. It is
+# parsed by the setup.py at build time.
+{
+    "NAME" : "friendlyshell",
+    "REPO" : "friendlyshell",
+    "DEPENDENCIES" : [
+        "six",
+        "pyparsing",
+        "tabulate",
+        'pyreadline; platform_system == "Windows"',
+    ],
+    "DEV_DEPENDENCIES" : [
+        "twine",
+        "pytest",
+        "pytest-cov",
+        "pytest-timeout",
+        "mock",
+        "pylint",
+        "sphinx",
+        "tox",
+    ],
+    "DESCRIPTION" : "Framework for writing interactive Python command line "
+        "interfaces, similar to the 'cmd' built in class.",
+    "KEYWORDS" : "cmd command line shell interactive interpreter",
+    "SUPPORTED_PYTHON_VERSION" :
+        ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
+}
