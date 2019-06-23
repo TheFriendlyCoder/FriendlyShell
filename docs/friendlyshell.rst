@@ -12,6 +12,7 @@ Submodules
    friendlyshell.command_complete_mixin
    friendlyshell.command_parsers
    friendlyshell.shell_help_mixin
+   friendlyshell.version
 
 Module contents
 ---------------
